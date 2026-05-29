@@ -2,7 +2,7 @@
   "name": "Zoomi — نقشه فلزات گرانبها",
   "short_name": "Zoomi",
   "description": "پیدا کردن نزدیک‌ترین طلافروشی روی نقشه",
-  "start_url": "/Zoomi_New/",
+  "start_url": "/Zoomi_New/index.html",
   "scope": "/Zoomi_New/",
   "display": "standalone",
   "orientation": "portrait",
