@@ -1233,7 +1233,7 @@ input,textarea{font-family:var(--f)}
   #landing-view .cards{grid-template-columns:1fr 1fr}
   #landing-view .forms-grid{grid-template-columns:1fr}
   #landing-view .ft-top{grid-template-columns:1fr 1fr}
-  #landing-view .wrap{padding:0 20px}
+  #landing-view .wrap{padding:0 16px}
 
   /* هدر یک ردیف در موبایل */
   #landing-view .nav { height: 54px; }
@@ -1438,7 +1438,7 @@ input,textarea{font-family:var(--f)}
 .lf-btn:active { transform: scale(0.98); }
 
 @media (max-width: 700px) {
-  .lf-grid { grid-template-columns: 1fr; }
+  .lf-grid { grid-template-columns: 1fr; padding: 0 16px; box-sizing: border-box; }
   .lf-row2 { grid-template-columns: 1fr; }
 }
 
@@ -1768,7 +1768,7 @@ input,textarea{font-family:var(--f)}
 <!-- APP -->
 <div id="app">
   <!-- TOPBAR -->
-  <div id="topbar" style="justify-content:space-between;direction:ltr">
+  <div id="topbar" style="justify-content:space-between;direction:rtl">
     <a class="topbar-logo" href="#" onclick="showSection('landing');return false;">
       <div class="logo-icon">⚜</div>
       <div>
@@ -2086,16 +2086,7 @@ input,textarea{font-family:var(--f)}
             <label class="lf-label">یادداشت (اختیاری)</label>
             <textarea id="reg-note" class="lf-ta" placeholder="هر توضیح اضافه‌ای اینجا بنویسید" autocomplete="off"></textarea>
           </div>
-          <div class="lf-fld">
-            <label class="lf-label">تصاویر موجودی مغازه (اختیاری)</label>
-            <div id="reg-upload-area" onclick="document.getElementById('reg-photos').click()" style="border:2px dashed #D4C5A0;border-radius:12px;padding:24px 16px;text-align:center;cursor:pointer;background:#FEFAF0;transition:border-color .2s">
-              <span class="material-icons-round" style="font-size:32px;color:#C49A2A;display:block;margin-bottom:8px">add_photo_alternate</span>
-              <div style="font-size:13px;color:#7B6B4A;font-family:'Vazirmatn',sans-serif">برای آپلود عکس کلیک کنید</div>
-              <div style="font-size:11px;color:#A09070;margin-top:4px;font-family:'Vazirmatn',sans-serif">حداکثر ۷ عکس · JPG، PNG · تا ۱۰ مگابایت هر عکس</div>
-            </div>
-            <input id="reg-photos" type="file" accept="image/*" multiple style="display:none" onchange="handlePhotoSelect(this)">
-            <div id="reg-photo-preview" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px"></div>
-          </div>
+
         </div>
         <div style="margin-top:16px;display:flex;align-items:center;gap:12px">
           <button id="reg-btn" onclick="submitRegister()" style="height:36px;padding:0 20px;border-radius:8px;background:transparent;color:#D97757;font-family:'Vazirmatn',sans-serif;font-size:14px;font-weight:600;border:1px solid #D97757;cursor:pointer" onmouseover="this.style.background='#FEF3EE'" onmouseout="this.style.background='transparent'">ثبت رایگان</button>
@@ -2170,57 +2161,7 @@ async function submitSupport() {
   btn.disabled=false;btn.textContent='ارسال';
 }
 
-let selectedPhotos = [];
 
-function handlePhotoSelect(input) {
-  const files = Array.from(input.files);
-  const maxSize = 10 * 1024 * 1024;
-  const newFiles = files.filter(f => {
-    if (f.size > maxSize) { alert(`فایل ${f.name} بیش از ۱۰ مگابایت است`); return false; }
-    return true;
-  });
-  // اضافه کردن به قبلی‌ها تا ۷ تا
-  selectedPhotos = [...selectedPhotos, ...newFiles].slice(0, 7);
-  renderPhotoPreview();
-}
-
-function renderPhotoPreview() {
-  const preview = document.getElementById('reg-photo-preview');
-  preview.innerHTML = selectedPhotos.map((f, i) => `
-    <div style="position:relative;width:72px;height:72px">
-      <img src="${URL.createObjectURL(f)}" style="width:72px;height:72px;object-fit:cover;border-radius:8px;border:1px solid #D4C5A0">
-      <button onclick="removePhoto(${i})" style="position:absolute;top:-6px;right:-6px;width:18px;height:18px;border-radius:50%;background:#7B3F2A;border:none;color:#fff;font-size:11px;cursor:pointer;line-height:1">✕</button>
-    </div>`).join('');
-  document.getElementById('reg-upload-area').style.borderColor = selectedPhotos.length ? '#C49A2A' : '#D4C5A0';
-  // آپدیت متن ناحیه آپلود
-  const hint = document.querySelector('#reg-upload-area div:last-child');
-  if (hint) hint.textContent = selectedPhotos.length < 7
-    ? `${selectedPhotos.length} عکس انتخاب شده · می‌توانید ${7 - selectedPhotos.length} عکس دیگر اضافه کنید`
-    : 'حداکثر ۷ عکس انتخاب شده';
-}
-
-function removePhoto(idx) {
-  selectedPhotos.splice(idx, 1);
-  renderPhotoPreview();
-}
-
-async function compressPhoto(file, maxWidth=1200, quality=0.75) {
-  return new Promise((resolve) => {
-    const img = new Image();
-    const url = URL.createObjectURL(file);
-    img.onload = () => {
-      URL.revokeObjectURL(url);
-      const scale = Math.min(1, maxWidth / img.width);
-      const canvas = document.createElement('canvas');
-      canvas.width  = Math.round(img.width  * scale);
-      canvas.height = Math.round(img.height * scale);
-      canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
-      resolve({ base64: canvas.toDataURL('image/jpeg', quality), mimeType: 'image/jpeg' });
-    };
-    img.onerror = () => resolve(null);
-    img.src = url;
-  });
-}
 
 async function submitRegister() {
   const name    = document.getElementById('reg-name').value.trim();
@@ -2237,34 +2178,20 @@ async function submitRegister() {
 
   btn.disabled = true; btn.textContent = '⏳ در حال ارسال...';
   status.style.display = 'inline'; status.style.color = '#888';
-  status.textContent = selectedPhotos.length ? 'در حال آپلود تصاویر...' : 'در حال ارسال...';
+  status.textContent = 'در حال ارسال...';
 
   try {
-    // آپلود عکس‌ها به Imgur
-    const photoLinks = [];
-    for (let i = 0; i < selectedPhotos.length; i++) {
-      status.textContent = `آپلود تصویر ${i+1} از ${selectedPhotos.length}...`;
-      const link = await uploadToImgur(selectedPhotos[i]);
-      photoLinks.push(link);
-    }
-
-    status.textContent = 'در حال ثبت اطلاعات...';
     await fetch(SHEETS_URL, {
       method: 'POST',
       mode: 'no-cors',
       headers: { 'Content-Type': 'text/plain' },
-      body: JSON.stringify({ type: 'register', name, phone, address, note, photoLinks })
+      body: JSON.stringify({ type: 'register', name, phone, address, note, photoLinks: [] })
     });
-
     status.style.color = '#386A20';
-    status.textContent = '✓ درخواست ثبت شد' + (photoLinks.length ? ` (${photoLinks.length} تصویر)` : '');
+    status.textContent = '✓ درخواست ثبت شد';
     ['reg-name','reg-phone','reg-address','reg-note'].forEach(id => {
       const el = document.getElementById(id); if (el) el.value = '';
     });
-    selectedPhotos = [];
-    document.getElementById('reg-photo-preview').innerHTML = '';
-    document.getElementById('reg-upload-area').style.borderColor = '#D4C5A0';
-    renderPhotoPreview();
   } catch(e) {
     status.style.color = '#BA1A1A';
     status.textContent = 'خطا: ' + e.message;
