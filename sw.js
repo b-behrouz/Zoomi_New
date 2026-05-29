@@ -1,33 +1,31 @@
-const CACHE = 'zoomi-v1';
+const CACHE = 'zoomi-v2';
 const ASSETS = [
-  '/Eyar-new/',
-  '/Eyar-new/index.html',
-  'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css',
-  'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js'
+  '/Zoomi_New/',
+  '/Zoomi_New/index.html',
+  '/Zoomi_New/icon-192.png',
+  '/Zoomi_New/icon-512.png'
 ];
 
 self.addEventListener('install', e => {
   e.waitUntil(
-    caches.open(CACHE).then(c => {
-      return Promise.allSettled(ASSETS.map(a => c.add(a)));
-    }).then(() => self.skipWaiting())
+    caches.open(CACHE)
+      .then(c => Promise.allSettled(ASSETS.map(a => c.add(a))))
+      .then(() => self.skipWaiting())
   );
 });
 
 self.addEventListener('activate', e => {
   e.waitUntil(
-    caches.keys().then(keys =>
-      Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))
-    ).then(() => self.clients.claim())
+    caches.keys()
+      .then(keys => Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k))))
+      .then(() => self.clients.claim())
   );
 });
 
 self.addEventListener('fetch', e => {
   if (e.request.method !== 'GET') return;
   if (e.request.url.includes('script.google.com') ||
-      e.request.url.includes('imgur.com') ||
-      e.request.url.includes('fonts.googleapis.com') ||
-      e.request.url.includes('fonts.gstatic.com')) return;
+      e.request.url.includes('imgur.com')) return;
 
   e.respondWith(
     caches.match(e.request).then(cached => {
@@ -36,7 +34,7 @@ self.addEventListener('fetch', e => {
         if (!res || res.status !== 200 || res.type === 'opaque') return res;
         caches.open(CACHE).then(c => c.put(e.request, res.clone()));
         return res;
-      }).catch(() => caches.match('/Eyar-new/index.html'));
+      }).catch(() => caches.match('/Zoomi_New/index.html'));
     })
   );
 });
