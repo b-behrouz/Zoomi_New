@@ -1,0 +1,2967 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Zoomi | نزدیک‌ترین طلافروشی، بهترین قیمت روی نقشه</title>
+<!-- PWA -->
+<link rel="manifest" href="/Zoomi/manifest.json">
+<meta name="theme-color" content="#C49A2A">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Zoomi">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons+Round">
+<style>
+/* ════════════════════════════════
+   MAP STYLES
+════════════════════════════════ */
+
+  :root {
+    /* — لندینگ UI Kit — */
+    --p:              #D97757;
+    --p-h:            #C4623E;
+    --bg:             #FAF9F5;
+    --white:          #FFFFFF;
+    --border:         #E8E5DE;
+    --t1:             #1A1916;
+    --t2:             #6B6760;
+    --t3:             #9E9A93;
+    --br:             8px;
+    --cr:             16px;
+    --bh:             36px;
+
+    /* — alias برای کدهای قدیمی — */
+    --md-sys-color-primary:              #D97757;
+    --md-sys-color-on-primary:           #ffffff;
+    --md-sys-color-primary-container:    #FEF3EE;
+    --md-sys-color-on-primary-container: #5C1A00;
+    --md-sys-color-secondary:            #D97757;
+    --md-sys-color-on-secondary:         #ffffff;
+    --md-sys-color-secondary-container:  #FEF3EE;
+    --md-sys-color-on-secondary-container:#5C1A00;
+    --md-sys-color-surface:              #FAF9F5;
+    --md-sys-color-surface-variant:      #F2EEE8;
+    --md-sys-color-on-surface:           #1A1916;
+    --md-sys-color-on-surface-variant:   #6B6760;
+    --md-sys-color-outline:              #E8E5DE;
+    --md-sys-color-outline-variant:      #EEEBe4;
+    --md-sys-color-shadow:               rgba(0,0,0,0.06);
+    --md-sys-color-scrim:                rgba(0,0,0,0.45);
+    --md-sys-color-surface-container:    #F2EEE8;
+    --md-sys-color-surface-container-high:  #EAE6DF;
+    --md-sys-color-surface-container-highest:#E2DED7;
+    --gold-shimmer:   #D97757;
+    --gold-deep:      #C4623E;
+    --font: 'Vazirmatn', sans-serif;
+    --elevation-1: 0 1px 2px rgba(0,0,0,0.04), 0 1px 3px rgba(0,0,0,0.06);
+    --elevation-2: 0 1px 2px rgba(0,0,0,0.04), 0 2px 6px rgba(0,0,0,0.08);
+    --elevation-3: 0 4px 8px rgba(0,0,0,0.06), 0 2px 4px rgba(0,0,0,0.04);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: var(--font);
+    background: var(--bg);
+    color: var(--md-sys-color-on-surface);
+    direction: rtl;
+    overflow-x: hidden;
+  }
+  body.map-mode {
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  /* ─── POPUP OVERLAY ─── */
+  #popup-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(20,18,14,0.55);
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: fadeInOverlay 0.4s ease;
+  }
+
+  @keyframes fadeInOverlay {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  @keyframes slideUpCard {
+    from { opacity: 0; transform: translateY(32px) scale(0.96); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  @keyframes popupExit {
+    from { opacity: 1; transform: scale(1); }
+    to { opacity: 0; transform: scale(0.94) translateY(-16px); }
+  }
+
+  @keyframes overlayExit {
+    from { opacity: 1; }
+    to { opacity: 0; }
+  }
+
+  #popup-card {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--cr);
+    padding: 40px 36px 36px;
+    width: 400px;
+    max-width: 92vw;
+    text-align: center;
+    box-shadow: 0 4px 32px rgba(0,0,0,0.12);
+    animation: slideUpCard 0.45s cubic-bezier(0.34, 1.4, 0.64, 1) 0.05s both;
+    position: relative;
+  }
+
+  .popup-logo-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 28px;
+  }
+
+  .popup-logo-icon {
+    width: 36px; height: 36px;
+    border-radius: var(--br);
+    background: var(--p);
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-size: 16px;
+  }
+
+  .popup-logo-name {
+    font-size: 18px; font-weight: 800;
+    color: var(--t1); letter-spacing: -.3px;
+  }
+
+  .popup-divider {
+    height: 1px; background: var(--border);
+    margin: 0 -36px 28px;
+  }
+
+  #popup-card h1 {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--t1);
+    line-height: 1.4;
+    margin-bottom: 8px;
+    letter-spacing: -0.4px;
+  }
+
+  #popup-card .popup-sub {
+    font-size: 14px;
+    color: var(--t2);
+    margin-bottom: 28px;
+    line-height: 1.7;
+  }
+
+  .popup-pills {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 28px;
+    flex-wrap: wrap;
+  }
+
+  .popup-pill {
+    display: inline-flex; align-items: center; gap: 5px;
+    background: #FEF3EE;
+    border: 1px solid rgba(217,119,87,.2);
+    border-radius: 6px;
+    padding: 5px 12px;
+    font-size: 12px; font-weight: 600;
+    color: var(--p);
+  }
+
+  .start-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--p);
+    color: #fff;
+    border: none;
+    border-radius: var(--br);
+    height: var(--bh);
+    padding: 0 24px;
+    font-size: 14px;
+    font-weight: 600;
+    font-family: var(--font);
+    cursor: pointer;
+    transition: background .15s, transform .1s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .start-btn::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: rgba(255,255,255,0);
+    transition: background 0.2s;
+  }
+
+  .start-btn:hover { background: var(--p-h); }
+  .start-btn:hover::before { background: rgba(255,255,255,0.08); }
+  .start-btn:active { transform: translateY(0) scale(0.98); }
+
+  .start-btn .material-icons-round { font-size: 20px; }
+
+  /* ─── APP SHELL ─── */
+  #app {
+    display: none;
+    height: 100vh;
+    flex-direction: row;
+  }
+
+  /* هدر زیر overlay وقتی popup باز است */
+  body.popup-open #topbar {
+    z-index: 9998;
+  }
+
+  /* ─── TOPBAR ─── */
+  #topbar {
+    position: fixed;
+    top: 0; right: 0; left: 0;
+    height: 60px;
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    padding: 0 20px;
+    gap: 16px;
+    z-index: 10000;
+  }
+
+  .topbar-logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none;
+  }
+
+  .logo-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: var(--p);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 18px;
+    font-family: serif;
+    font-weight: 700;
+    box-shadow: 0 2px 8px rgba(139,94,60,0.3);
+  }
+
+  .logo-text {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--md-sys-color-on-surface);
+    letter-spacing: -0.3px;
+  }
+
+  .logo-sub {
+    font-size: 11px;
+    color: var(--md-sys-color-on-surface-variant);
+    font-weight: 400;
+    margin-top: -2px;
+  }
+
+  .topbar-search {
+    flex: 1;
+    max-width: 480px;
+    margin: 0 auto;
+    position: relative;
+  }
+
+  .topbar-search input {
+    width: 100%;
+    height: var(--bh);
+    border-radius: var(--br);
+    border: 1px solid var(--border);
+    background: var(--white);
+    padding: 0 12px 0 12px;
+    font-family: var(--font);
+    font-size: 14px;
+    color: var(--t1);
+    outline: none;
+    transition: border-color .15s, box-shadow .15s;
+    direction: rtl;
+  }
+
+  .topbar-search input::placeholder { color: var(--md-sys-color-on-surface-variant); }
+  .topbar-search input:focus {
+    border-color: var(--p);
+    box-shadow: 0 0 0 3px rgba(217,119,87,.12);
+  }
+
+  .search-icon {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--t3);
+    font-size: 18px;
+    pointer-events: none;
+  }
+
+  .topbar-chip {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--p);
+    color: #fff;
+    border-radius: var(--br);
+    height: var(--bh);
+    padding: 0 16px;
+    font-size: 13px;
+    font-weight: 600;
+    font-family: var(--font);
+    border: none;
+    cursor: pointer;
+    transition: background .15s;
+    white-space: nowrap;
+  }
+
+  .topbar-chip:hover { background: var(--p-h); }
+  .topbar-chip .material-icons-round { font-size: 16px; }
+
+  /* ─── SIDEBAR ─── */
+  #sidebar {
+    position: fixed;
+    top: 60px;
+    right: 0;
+    bottom: 0;
+    width: 320px;
+    background: var(--bg);
+    border-left: 1px solid var(--border);
+    overflow: hidden;
+    z-index: 50;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .shops-scroll-wrap {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+
+  .shops-scroll-wrap::-webkit-scrollbar { width: 4px; }
+  .shops-scroll-wrap::-webkit-scrollbar-track { background: transparent; }
+  .shops-scroll-wrap::-webkit-scrollbar-thumb { background: var(--md-sys-color-outline); border-radius: 2px; }
+
+
+
+  .sidebar-header {
+    padding: 20px 20px 12px;
+    position: sticky;
+    top: 0;
+    background: var(--md-sys-color-surface);
+    z-index: 1;
+    border-bottom: 1px solid var(--md-sys-color-outline-variant);
+  }
+
+  .sidebar-title {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--t3);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin-bottom: 4px;
+  }
+
+  .sidebar-count {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--t1);
+  }
+
+  .sidebar-count span {
+    font-size: 13px;
+    font-weight: 400;
+    color: var(--t2);
+  }
+
+  .filter-carousel-wrap {
+    position: relative;
+    border-bottom: 1px solid var(--border);
+    background: #EEECEA;
+    padding: 4px 8px;
+  }
+
+  .filter-carousel-wrap::before,
+  .filter-carousel-wrap::after {
+    content: '';
+    position: absolute;
+    top: 0; bottom: 0;
+    width: 28px;
+    z-index: 2;
+    pointer-events: none;
+  }
+
+  .filter-carousel-wrap::before {
+    right: 0;
+    background: linear-gradient(to left, #EEECEA, transparent);
+  }
+
+  .filter-carousel-wrap::after {
+    left: 0;
+    background: linear-gradient(to right, #EEECEA, transparent);
+  }
+
+  .sidebar-filter {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 5px;
+    padding: 0 4px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+    cursor: grab;
+    user-select: none;
+  }
+
+  .sidebar-filter.dragging { cursor: grabbing; scroll-behavior: auto; }
+  .sidebar-filter::-webkit-scrollbar { display: none; }
+
+  .filter-chip {
+    display: inline-flex;
+    align-items: center;
+    white-space: nowrap;
+    flex-shrink: 0;
+    background: transparent;
+    border: none;
+    border-radius: 7px;
+    padding: 0 14px;
+    font-size: 13px;
+    font-family: var(--font);
+    color: var(--t2);
+    cursor: pointer;
+    transition: all 0.15s;
+    font-weight: 500;
+    height: 28px;
+  }
+
+  .filter-chip:hover {
+    background: #F0EDE6;
+    color: var(--t1);
+  }
+
+  .filter-chip.active {
+    background: var(--white);
+    color: var(--t1);
+    font-weight: 600;
+    box-shadow: 0 1px 3px rgba(0,0,0,.08);
+  }
+
+  .shops-list { padding: 0; display: flex; flex-direction: column; }
+
+  .shop-card {
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid var(--md-sys-color-outline-variant);
+    border-radius: 0;
+    padding: 14px 16px;
+    cursor: pointer;
+    transition: background 0.15s;
+    position: relative;
+  }
+
+  .shop-card:last-child { border-bottom: none; }
+
+  .shop-card:hover { background: var(--md-sys-color-surface-variant); }
+
+  .shop-card.active { background: var(--md-sys-color-primary-container); }
+
+  .shop-card-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+    gap: 8px;
+  }
+
+  .shop-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--t1);
+    line-height: 1.3;
+    flex: 1;
+  }
+
+  .shop-card.active .shop-name { color: var(--p); }
+
+  .shop-type-badge {
+    display: inline-flex;
+    align-items: center;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 6px;
+    flex-shrink: 0;
+  }
+
+  .badge-gold { background: #FEF3EE; color: var(--p); border: 1px solid rgba(217,119,87,.2); }
+  .badge-silver { background: #F0F0F8; color: #404060; border: 1px solid rgba(100,100,160,.15); }
+  .badge-jewelry { background: #FFF0F5; color: #900050; border: 1px solid rgba(200,60,130,.15); }
+  .badge-coin { background: #F0F8F0; color: #2A6030; border: 1px solid rgba(60,150,60,.15); }
+
+
+
+  .shop-address {
+    font-size: 12px;
+    color: var(--md-sys-color-on-surface-variant);
+    line-height: 1.6;
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+  }
+
+  .shop-address-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--t3);
+    flex-shrink: 0;
+    margin-top: 5px;
+    opacity: 0.8;
+  }
+
+  .shop-phone {
+    font-size: 12px;
+    color: var(--md-sys-color-on-surface-variant);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 4px;
+    direction: ltr;
+    justify-content: flex-end;
+    font-weight: 500;
+  }
+
+  .shop-phone-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--md-sys-color-secondary);
+    flex-shrink: 0;
+    opacity: 0.5;
+  }
+
+
+
+  /* ─── MAP ─── */
+  #map-container {
+    position: fixed;
+    top: 60px;
+    right: 320px;
+    left: 0;
+    bottom: 0;
+    z-index: 10;
+  }
+
+  #map { width: 100%; height: 100%; }
+
+  /* ─── LEAFLET OVERRIDES ─── */
+  .leaflet-control-attribution { display: none !important; }
+
+  .leaflet-control-zoom {
+    border-radius: var(--cr) !important;
+    overflow: hidden;
+    box-shadow: var(--elevation-3) !important;
+    border: none !important;
+  }
+
+  .leaflet-control-zoom a {
+    font-family: var(--font) !important;
+    color: var(--md-sys-color-on-surface) !important;
+    background: var(--md-sys-color-surface) !important;
+    border-color: var(--border) !important;
+    font-size: 18px !important;
+    width: 36px !important;
+    height: 36px !important;
+    line-height: 36px !important;
+  }
+
+  /* ─── CUSTOM MAP MARKER ─── */
+  .custom-marker {
+    width: 36px;
+    height: 36px;
+    border-radius: 50% 50% 50% 0;
+    transform: rotate(-45deg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(139,94,60,0.4);
+    cursor: pointer;
+    transition: all 0.2s;
+    border: 2.5px solid white;
+  }
+
+  .custom-marker.gold { background: linear-gradient(135deg, #D4A843, #8B5E3C); }
+  .custom-marker.silver { background: linear-gradient(135deg, #9090A8, #606080); }
+  .custom-marker.jewelry { background: linear-gradient(135deg, #C860A0, #803070); }
+  .custom-marker.coin { background: linear-gradient(135deg, #48A048, #285028); }
+
+  .custom-marker span {
+    transform: rotate(45deg);
+    font-size: 16px;
+    font-weight: 700;
+    color: white;
+    font-family: serif;
+  }
+
+  .custom-marker.active {
+    width: 44px;
+    height: 44px;
+    box-shadow: 0 6px 20px rgba(139,94,60,0.5);
+  }
+
+  /* ─── POPUP ─── */
+  .leaflet-popup-content-wrapper {
+    border-radius: var(--cr) !important;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.15) !important;
+    border: 1px solid var(--md-sys-color-outline-variant) !important;
+    overflow: visible !important;
+    padding: 0 !important;
+  }
+
+  .leaflet-popup-content {
+    margin: 0 !important;
+    font-family: var(--font) !important;
+    direction: rtl;
+  }
+
+  .leaflet-popup-tip-container { display: none; }
+
+  .leaflet-popup-close-button {
+    left: 8px !important;
+    right: auto !important;
+    top: 8px !important;
+    color: var(--t2) !important;
+    font-size: 16px !important;
+    width: 22px !important;
+    height: 22px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border-radius: 50% !important;
+    background: var(--surface-dim) !important;
+    transition: background 0.15s !important;
+    z-index: 10 !important;
+  }
+
+  .leaflet-popup-close-button:hover {
+    background: var(--md-sys-color-surface-variant) !important;
+    color: var(--md-sys-color-on-surface) !important;
+  }
+
+  .map-popup {
+    padding: 0;
+    min-width: 280px;
+    max-width: 300px;
+    overflow: visible;
+    font-family: var(--font);
+    direction: rtl;
+  }
+
+  .map-popup-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 14px 16px 10px;
+    flex-direction: row-reverse;
+  }
+
+  .map-popup-title { text-align: right; }
+
+  .map-popup-name {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--t1);
+    margin-bottom: 6px;
+    line-height: 1.3;
+  }
+
+  .map-popup-divider { height: 1px; background: var(--border); margin: 0; }
+
+  .map-popup-detail {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 0 16px;
+    margin-bottom: 8px;
+    font-size: 13px;
+    color: var(--t2);
+    line-height: 1.5;
+  }
+  .map-popup-detail:first-of-type { margin-top: 12px; }
+
+  .map-popup-detail .material-icons-round {
+    font-size: 16px;
+    color: var(--t3);
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  .map-popup-actions { padding: 12px 16px 16px; }
+
+  .popup-action-btn {
+    width: 100%;
+    height: 40px;
+    border-radius: 10px;
+    background: var(--p);
+    color: #fff;
+    border: none;
+    font-family: var(--font);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: opacity .15s;
+  }
+  .popup-action-btn:hover { opacity: .88; }
+  .popup-action-btn .material-icons-round { font-size: 16px; }
+
+
+
+  /* ─── MAP FAB ─── */
+
+
+
+
+
+
+  /* ─── ANIMATIONS ─── */
+  @keyframes markerPulse {
+    0%, 100% { box-shadow: 0 4px 12px rgba(139,94,60,0.4), 0 0 0 0 rgba(212,168,67,0.4); }
+    50% { box-shadow: 0 4px 12px rgba(139,94,60,0.4), 0 0 0 8px rgba(212,168,67,0); }
+  }
+
+  .custom-marker.pulse { animation: markerPulse 2s ease-in-out infinite; }
+
+  @keyframes appFadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  #app.visible { animation: appFadeIn 0.4s ease; }
+
+  /* ─── EMPTY STATE ─── */
+  .empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+    text-align: center;
+    color: var(--md-sys-color-on-surface-variant);
+  }
+
+  .empty-state .material-icons-round { font-size: 48px; margin-bottom: 12px; opacity: 0.4; }
+  .empty-state p { font-size: 14px; line-height: 1.6; }
+
+  @media (max-width: 768px) {
+
+    /* ─── TOPBAR موبایل ─── */
+    #topbar {
+      padding: 0 12px;
+      gap: 8px;
+      height: 54px;
+    }
+
+    .logo-text { font-size: 15px; }
+    .logo-sub { display: none; }
+    .logo-icon { width: 30px; height: 30px; font-size: 14px; }
+
+    .topbar-search { max-width: unset; flex: 1; }
+    .topbar-search input { font-size: 13px; height: 34px; }
+
+    .topbar-chip {
+      height: 34px;
+      padding: 0 10px;
+      font-size: 12px;
+    }
+    .topbar-chip span.material-icons-round { font-size: 16px; }
+
+    /* فقط آیکون دکمه موقعیت در موبایل */
+    .topbar-chip-text { display: none; }
+
+    /* ─── SIDEBAR موبایل — bottom sheet ─── */
+    #sidebar {
+      right: 0; left: 0;
+      top: auto;
+      bottom: 0;
+      width: 100%;
+      height: 28vh;
+      min-height: 120px;
+      max-height: 45vh;
+      border-left: none;
+      border-top: 1px solid var(--border);
+      border-radius: 20px 20px 0 0;
+      box-shadow: 0 -4px 20px rgba(0,0,0,0.1);
+      overflow: hidden;
+    }
+
+    /* دستگیره کشیدن */
+    #sidebar::before {
+      content: '';
+      display: block;
+      width: 36px;
+      height: 4px;
+      background: var(--border);
+      border-radius: 2px;
+      margin: 10px auto 0;
+      flex-shrink: 0;
+    }
+
+    #map-container {
+      right: 0;
+      bottom: 0;
+      top: 54px;
+    }
+
+    /* ─── shop cards موبایل ─── */
+    .shop-card { padding: 10px 12px; }
+    .shop-name { font-size: 13px; }
+    .shop-address { font-size: 11px; }
+    .shop-phone { font-size: 11px; }
+
+    /* ─── filter chips موبایل ─── */
+    .filter-chip { font-size: 11px; height: 24px; padding: 0 10px; }
+
+    /* ─── popup موبایل ─── */
+    #popup-card { padding: 28px 20px 24px; width: 92vw; }
+    #popup-card h1 { font-size: 18px; }
+
+    /* ─── map popup موبایل ─── */
+    .leaflet-popup-content-wrapper { max-width: 260px !important; }
+    .map-popup { padding: 14px; min-width: 180px; }
+    .map-popup-name { font-size: 13px; }
+
+    .map-legend { display: none; }
+
+    /* ─── فیلتر تگ‌ها زیر سرچ در موبایل ─── */
+    #mobile-filter-bar {
+      display: flex !important;
+    }
+
+    /* سایدبار اصلی مخفی در موبایل */
+    #sidebar {
+      display: none !important;
+    }
+
+    #map-container {
+      bottom: 0;
+      top: 54px;
+    }
+
+    /* کارت پایین موبایل */
+    #mobile-card {
+      display: block !important;
+      bottom: 0;
+    }
+
+    #map-container {
+      bottom: 0 !important;
+    }
+  }
+
+  /* موبایل خیلی کوچیک */
+  @media (max-width: 380px) {
+    .topbar-search { display: none; }
+    #topbar { justify-content: space-between; }
+  }
+
+
+/* ════════════════════════════════
+   LANDING STYLES (scoped)
+════════════════════════════════ */
+#landing-view {
+  display: none;
+  min-height: 100vh;
+  background: #FAF9F5;
+  font-family: 'Vazirmatn', sans-serif;
+  direction: rtl;
+  color: #1A1916;
+  overflow-x: hidden;
+  max-width: 100vw;
+}
+
+/* Reset shared tokens for landing */
+#landing-view * { box-sizing: border-box; }
+#landing-view a { text-decoration: none; color: inherit; }
+#landing-view button { font-family: 'Vazirmatn', sans-serif; cursor: pointer; border: none; background: none; }
+#landing-view input, #landing-view textarea { font-family: 'Vazirmatn', sans-serif; }
+
+/* ── Copy landing CSS scoped ── */
+
+/* ── TOKENS ── */
+:root {
+  --p:      #D97757;
+  --p-h:    #C4623E;
+  --bg:     #FAF9F5;
+  --white:  #FFFFFF;
+  --border: #E8E5DE;
+  --t1:     #1A1916;
+  --t2:     #6B6760;
+  --t3:     #9E9A93;
+  --f:      'Vazirmatn', sans-serif;
+  --bh:     36px;
+  --br:     8px;
+  --cr:     16px;
+}
+
+/* ── RESET ── */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;overflow-x:hidden}
+body{font-family:var(--f);background:var(--bg);color:var(--t1);direction:rtl;font-size:14px;line-height:1.6;-webkit-font-smoothing:antialiased;overflow-x:hidden;}
+a{text-decoration:none;color:inherit}
+button{font-family:var(--f);cursor:pointer;border:none;background:none}
+input,textarea{font-family:var(--f)}
+
+/* ── LAYOUT ── */
+#landing-view .wrap{max-width:1080px;margin:0 auto;padding:0 40px;box-sizing:border-box;width:100%}
+
+/* ── BTN ── */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;
+  height:var(--bh);padding:0 16px;
+  border-radius:var(--br);font-size:14px;font-weight:600;
+  transition:background .15s,transform .1s;white-space:nowrap;border:none;cursor:pointer;
+}
+#landing-view .btn-p{background:var(--p);color:#fff}
+#landing-view .btn-p:hover{background:var(--p-h)}
+#landing-view .btn-p:active{transform:scale(.98)}
+#landing-view .btn-ghost{background:transparent;color:var(--t1);border:1px solid var(--border)}
+#landing-view .btn-ghost:hover{background:#F0EDE6}
+
+/* ── INPUT ── */
+#landing-view .inp{
+  height:var(--bh);border:1px solid var(--border);border-radius:var(--br);
+  padding:0 12px;font-size:14px;color:var(--t1);background:var(--white);
+  outline:none;transition:border-color .15s,box-shadow .15s;direction:rtl;width:100%;
+}
+#landing-view .inp::placeholder{color:var(--t3)}
+#landing-view .inp:focus{border-color:var(--p);box-shadow:0 0 0 3px rgba(217,119,87,.12)}
+#landing-view .ta{
+  border:1px solid var(--border);border-radius:var(--br);padding:10px 12px;
+  font-size:14px;color:var(--t1);background:var(--white);
+  outline:none;transition:border-color .15s,box-shadow .15s;
+  direction:rtl;width:100%;resize:none;line-height:1.7;
+}
+#landing-view .ta::placeholder{color:var(--t3)}
+#landing-view .ta:focus{border-color:var(--p);box-shadow:0 0 0 3px rgba(217,119,87,.12)}
+
+/* ── SWITCHER ── */
+#landing-view .sw{
+  display:inline-flex;align-items:center;
+  background:#EEECEA;border-radius:10px;padding:4px;gap:2px;
+}
+#landing-view .sw-btn{
+  height:28px;padding:0 18px;border-radius:7px;
+  font-size:13px;font-weight:500;color:var(--t2);
+  background:transparent;border:none;cursor:pointer;
+  transition:all .18s;
+}
+#landing-view .sw-btn.on{
+  background:var(--white);color:var(--t1);font-weight:600;
+  box-shadow:0 1px 3px rgba(0,0,0,.08);
+}
+
+/* ── FIELD ── */
+#landing-view .fld{display:flex;flex-direction:column;gap:6px}
+#landing-view .fld label{font-size:13px;font-weight:500;color:var(--t2)}
+
+/* ── NAV ── */
+.nav{
+  height:60px;border-bottom:1px solid var(--border);
+  background:var(--bg);position:sticky;top:0;z-index:100;
+}
+.nav #landing-view .wrap{height:100%;display:flex;align-items:center;justify-content:space-between}
+#landing-view .nav {
+  height: 60px;
+  border-bottom: 1px solid var(--border);
+  background: #FAF9F5;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+#landing-view .nav .wrap {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+#landing-view .nav-logo{font-size:18px;font-weight:800;color:var(--t1);letter-spacing:-.3px}
+#landing-view .nav-links{display:flex;align-items:center;gap:2px;list-style:none}
+#landing-view .nav-links a{
+  font-size:14px;color:var(--t2);padding:6px 12px;
+  border-radius:var(--br);transition:color .15s,background .15s;
+}
+#landing-view .nav-links a:hover{color:var(--t1);background:#F0EDE6}
+
+/* ── HERO ── */
+.hero{padding:72px 0 80px}
+#landing-view .hero-grid{
+  display:grid;grid-template-columns:500px 1fr;
+  gap:56px;align-items:center;
+}
+
+/* Map box */
+#landing-view .hero-map{
+  width:500px;height:500px;border-radius:var(--cr);overflow:hidden;
+  border:1px solid var(--border);background:#E6E2D8;position:relative;flex-shrink:0;
+}
+#landing-view .map-grid{
+  width:100%;height:100%;
+  background:
+    repeating-linear-gradient(0deg,transparent,transparent 59px,rgba(0,0,0,.04) 59px,rgba(0,0,0,.04) 60px),
+    repeating-linear-gradient(90deg,transparent,transparent 59px,rgba(0,0,0,.04) 59px,rgba(0,0,0,.04) 60px),
+    #E6E2D8;
+  position:relative;
+}
+#landing-view .map-grid::before{
+  content:'';position:absolute;inset:0;
+  background:
+    linear-gradient(38deg,transparent 22%,#D4D0C6 22%,#D4D0C6 24%,transparent 24%),
+    linear-gradient(-55deg,transparent 35%,#D4D0C6 35%,#D4D0C6 37%,transparent 37%),
+    linear-gradient(75deg,transparent 10%,#CAC6BC 10%,#CAC6BC 13%,transparent 13%),
+    linear-gradient(10deg,transparent 60%,#D4D0C6 60%,#D4D0C6 62%,transparent 62%);
+}
+#landing-view .map-grid::after{
+  content:'';position:absolute;inset:0;
+  background:
+    linear-gradient(120deg,transparent 40%,rgba(255,255,255,.25) 40%,rgba(255,255,255,.25) 42%,transparent 42%),
+    linear-gradient(-20deg,transparent 55%,rgba(255,255,255,.15) 55%,rgba(255,255,255,.15) 57%,transparent 57%);
+}
+
+#landing-view .pin{
+  position:absolute;display:flex;flex-direction:column;align-items:center;gap:4px;
+  animation:pfloat 3s ease-in-out infinite;
+}
+#landing-view .pin:nth-child(2){animation-delay:.9s}
+#landing-view .pin:nth-child(3){animation-delay:1.8s}
+
+@keyframes lpfloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+
+#landing-view .pin-head{
+  width:34px;height:34px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);
+  background:var(--p);border:2.5px solid #fff;
+  box-shadow:0 3px 10px rgba(0,0,0,.2);
+  display:flex;align-items:center;justify-content:center;
+}
+#landing-view .pin-head span{transform:rotate(45deg);font-size:14px}
+
+#landing-view .pin-label{
+  background:#fff;border:1px solid var(--border);border-radius:6px;
+  padding:3px 9px;font-size:11px;font-weight:600;color:var(--t1);
+  white-space:nowrap;box-shadow:0 1px 4px rgba(0,0,0,.1);
+}
+
+/* Content */
+#landing-view .hero-eyebrow{font-size:13px;color:var(--t2);margin-bottom:14px}
+#landing-view .hero-h1{
+  font-size:40px;font-weight:800;line-height:1.25;
+  letter-spacing:-1px;color:var(--t1);margin-bottom:14px;
+}
+#landing-view .hero-body{font-size:14px;color:var(--t2);line-height:1.8;margin-bottom:32px;max-width:360px}
+#landing-view .hero-row{display:flex;align-items:center;gap:8px;direction:ltr}
+#landing-view .hero-inp-wrap{
+  flex:1;max-width:260px;
+  display:flex;align-items:center;
+  border:1px solid var(--border);border-radius:var(--br);
+  background:var(--white);overflow:hidden;
+  transition:border-color .15s,box-shadow .15s;
+}
+#landing-view .hero-inp-wrap:focus-within{border-color:var(--p);box-shadow:0 0 0 3px rgba(217,119,87,.12)}
+#landing-view .hero-inp-wrap input{
+  border:none;outline:none;height:var(--bh);padding:0 12px;
+  font-size:14px;font-family:var(--f);color:var(--t1);background:transparent;width:100%;direction:rtl;
+}
+#landing-view .hero-inp-wrap input::placeholder{color:var(--t3)}
+
+/* ── TABS SECTION ── */
+#landing-view .sec{border-top:1px solid var(--border);padding:64px 0}
+
+#landing-view .sec-center{text-align:center;margin-bottom:40px}
+#landing-view .sec-center h2{font-size:24px;font-weight:700;letter-spacing:-.3px;margin-bottom:8px}
+#landing-view .sec-center p{font-size:14px;color:var(--t2)}
+
+#landing-view .sw-wrap{display:flex;justify-content:center;margin-bottom:40px}
+
+#landing-view .tab{display:none}
+#landing-view .tab.on{display:block}
+
+#landing-view .cards{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:36px}
+#landing-view .card{
+  background:var(--white);border:1px solid var(--border);
+  border-radius:var(--cr);padding:24px 20px;
+  transition:box-shadow .18s,transform .18s;
+}
+#landing-view .card:hover{box-shadow:0 4px 14px rgba(0,0,0,.07);transform:translateY(-2px)}
+#landing-view .card-t{font-size:14px;font-weight:700;margin-bottom:8px}
+#landing-view .card-b{font-size:13px;color:var(--t2);line-height:1.7}
+
+#landing-view .tab-cta{display:flex;justify-content:center}
+
+/* ── FAQ ── */
+#landing-view .faq-list{max-width:680px;margin:0 auto}
+#landing-view .faq-item{border-bottom:1px solid var(--border)}
+#landing-view .faq-item:first-child{border-top:1px solid var(--border)}
+#landing-view .faq-q{
+  width:100%;display:flex;align-items:center;justify-content:space-between;
+  padding:18px 0;font-size:14px;font-weight:600;color:var(--t1);
+  text-align:right;gap:16px;cursor:pointer;background:none;border:none;
+  font-family:var(--f);transition:color .15s;
+}
+#landing-view .faq-q:hover{color:var(--p)}
+#landing-view .faq-ico{
+  width:24px;height:24px;border-radius:50%;border:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+  transition:all .22s;position:relative;
+}
+#landing-view .faq-ico::before, #landing-view .faq-ico::after{
+  content:'';position:absolute;background:var(--t2);
+  transition:all .22s;border-radius:2px;
+}
+.faq-ico::before{width:10px;height:1.5px}
+.faq-ico::after{width:1.5px;height:10px}
+#landing-view .faq-item.on .faq-ico{background:var(--p);border-color:var(--p)}
+#landing-view .faq-item.on .faq-ico::before, #landing-view .faq-item.on .faq-ico::after{background:#fff}
+#landing-view .faq-item.on .faq-ico::after{transform:rotate(90deg);opacity:0}
+#landing-view .faq-ans{
+  overflow:hidden;max-height:0;
+  transition:max-height .3s ease,padding .3s ease;
+  font-size:14px;color:var(--t2);line-height:1.8;
+}
+#landing-view .faq-item.on .faq-ans{max-height:300px;padding-bottom:18px}
+
+/* ── FORMS ── */
+#landing-view .forms-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:20px;
+  align-items:stretch;
+}
+
+#landing-view .form-box{
+  background:#FFFFFF;
+  border:1px solid var(--border);
+  border-radius:var(--cr);
+  padding:28px;
+  display:flex;
+  flex-direction:column;
+}
+
+#landing-view .form-t{
+  font-size:20px;font-weight:700;
+  letter-spacing:-.3px;
+  margin-bottom:20px;
+  padding-bottom:16px;
+  border-bottom:1px solid var(--border);
+}
+
+#landing-view .form-fields{
+  display:flex;flex-direction:column;gap:12px;flex:1;
+}
+
+#landing-view .form-fields .ta{
+  flex:1;
+  min-height:120px;
+  resize:none;
+}
+
+#landing-view .row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+
+#landing-view .form-act{
+  margin-top:auto;
+  padding-top:16px;
+  display:flex;
+  justify-content:flex-start;
+}
+
+/* ── FOOTER ── */
+#landing-view footer{background:#19180F;color:#9E9A93;padding:56px 0 32px}
+#landing-view .ft-top{
+  display:grid;grid-template-columns:1.8fr 1fr 1fr 1fr;gap:48px;
+  padding-bottom:40px;border-bottom:1px solid rgba(255,255,255,.07);margin-bottom:28px;
+}
+#landing-view .ft-logo{font-size:18px;font-weight:800;color:#fff;margin-bottom:12px}
+#landing-view .ft-tag{font-size:13px;line-height:1.8;color:#B8B4AD;max-width:240px}
+#landing-view .ft-badge{
+  display:inline-flex;align-items:center;gap:6px;margin-top:16px;
+  background:rgba(217,119,87,.1);border:1px solid rgba(217,119,87,.2);
+  border-radius:6px;padding:5px 12px;font-size:12px;color:var(--p);font-weight:500;
+}
+#landing-view .ft-col-t{font-size:13px;font-weight:600;color:#fff;margin-bottom:16px}
+#landing-view .ft-col ul{list-style:none;display:flex;flex-direction:column;gap:10px}
+#landing-view .ft-col a{font-size:13px;color:#B8B4AD;transition:color .15s}
+#landing-view .ft-col a:hover{color:#fff}
+#landing-view .ft-bottom{
+  display:flex;align-items:center;justify-content:space-between;
+  font-size:12px;color:#8A8680;
+}
+
+/* ── FADE ── */
+#landing-view .fade{opacity:0;transform:translateY(14px);transition:opacity .5s ease,transform .5s ease}
+#landing-view .fade.in{opacity:1;transform:none}
+
+/* ── RESPONSIVE ── */
+@media(max-width:960px){
+  #landing-view .hero-grid{grid-template-columns:1fr}
+  #landing-view .hero-map{width:100%;height:280px}
+  #landing-view .cards{grid-template-columns:1fr 1fr}
+  #landing-view .forms-grid{grid-template-columns:1fr}
+  #landing-view .ft-top{grid-template-columns:1fr 1fr}
+  #landing-view .wrap{padding:0 20px}
+
+  /* هدر یک ردیف در موبایل */
+  #landing-view .nav { height: 54px; }
+  #landing-view .nav .wrap {
+    height: 54px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    flex-wrap: nowrap;
+    padding: 0 16px;
+  }
+
+  /* لوگو راست — بدون تغییر */
+  #landing-view .nav-logo { font-size: 16px; flex-shrink: 0; }
+
+  /* لینک‌ها وسط */
+  #landing-view .nav-links {
+    display: flex !important;
+    flex: 1;
+    justify-content: center;
+    gap: 0;
+    flex-wrap: nowrap;
+    overflow: visible;
+    border-top: none;
+    padding: 0;
+    margin: 0;
+  }
+  #landing-view .nav-links li { flex-shrink: 0; }
+  #landing-view .nav-links a { font-size: 13px; white-space: nowrap; padding: 6px 10px; }
+  .nav-mob-hide { display: none !important; }
+
+  .lf-card { scroll-margin-top: 110px; }
+}
+
+
+/* ── BACK TO LANDING BUTTON (on map) ── */
+#back-to-landing {
+  position: fixed;
+  bottom: 24px;
+  right: 16px;
+  z-index: 9999;
+  background: var(--white);
+  color: var(--t1);
+  border: 1px solid var(--border);
+  border-radius: var(--br);
+  height: var(--bh);
+  padding: 0 14px;
+  font-family: var(--font);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  transition: all 0.15s;
+  display: none;
+  align-items: center;
+  gap: 6px;
+}
+#back-to-landing:hover { background: var(--bg); }
+#back-to-landing .material-icons-round { font-size: 16px; color: var(--t2); }
+
+@media(max-width:960px){
+  #landing-view .hero-grid{grid-template-columns:1fr}
+  #landing-view .hero-map{width:100%;height:280px}
+  #landing-view .cards{grid-template-columns:1fr 1fr}
+  #landing-view .forms-grid{grid-template-columns:1fr}
+  #landing-view .ft-top{grid-template-columns:1fr 1fr}
+  #landing-view .wrap{padding:0 20px}
+  #landing-view .nav-links{display:none}
+}
+
+/* ── LANDING FORMS (fully scoped, no conflicts) ── */
+.lf-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  align-items: stretch;
+}
+
+.lf-card {
+  background: #FFFFFF;
+  border: 1px solid #E8E5DE;
+  border-radius: 16px;
+  padding: 28px;
+  display: flex;
+  flex-direction: column;
+  min-height: 400px;
+  scroll-margin-top: 70px;
+}
+
+.lf-card-title {
+  font-family: 'Vazirmatn', sans-serif;
+  font-size: 20px;
+  font-weight: 700;
+  color: #1A1916;
+  letter-spacing: -0.3px;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #E8E5DE;
+  text-align: right;
+}
+
+.lf-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  flex: 1;
+}
+
+.lf-fld {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.lf-fld-grow {
+  display: flex;
+  flex-direction: column;
+}
+
+.lf-label {
+  font-family: 'Vazirmatn', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  color: #6B6760;
+  text-align: right;
+}
+
+.lf-inp {
+  font-family: 'Vazirmatn', sans-serif;
+  height: 36px;
+  border: 1px solid #E8E5DE;
+  border-radius: 8px;
+  padding: 0 12px;
+  font-size: 14px;
+  color: #1A1916;
+  background: #FAF9F5;
+  outline: none;
+  direction: rtl;
+  width: 100%;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.lf-inp::placeholder { color: #9E9A93; }
+.lf-inp:focus {
+  border-color: #D97757;
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(217,119,87,0.12);
+}
+
+.lf-ta {
+  font-family: 'Vazirmatn', sans-serif;
+  border: 1px solid #E8E5DE;
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 14px;
+  color: #1A1916;
+  background: #FAF9F5;
+  outline: none;
+  direction: rtl;
+  width: 100%;
+  height: 120px;
+  min-height: 120px;
+  resize: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  line-height: 1.6;
+}
+
+.lf-ta::placeholder { color: #9E9A93; }
+.lf-ta:focus {
+  border-color: #D97757;
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(217,119,87,0.12);
+}
+
+.lf-row2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.lf-act {
+  padding-top: 16px;
+  flex-shrink: 0;
+}
+
+.lf-btn {
+  font-family: 'Vazirmatn', sans-serif;
+  height: 36px;
+  padding: 0 20px;
+  border-radius: 8px;
+  background: #D97757;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.1s;
+}
+
+.lf-btn:hover { background: #C4623E; }
+.lf-btn:active { transform: scale(0.98); }
+
+@media (max-width: 700px) {
+  .lf-grid { grid-template-columns: 1fr; }
+  .lf-row2 { grid-template-columns: 1fr; }
+}
+
+
+/* ─── MOBILE FILTER BAR ─────────────────────────── */
+#mobile-filter-bar {
+  display: none;
+  position: fixed;
+  top: 54px;
+  right: 0; left: 0;
+  z-index: 90;
+  background: rgba(250,249,245,0.95);
+  backdrop-filter: blur(8px);
+  padding: 8px 12px;
+  gap: 6px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  border-bottom: 1px solid var(--border);
+  -webkit-overflow-scrolling: touch;
+}
+#mobile-filter-bar::-webkit-scrollbar { display: none; }
+
+.mob-chip {
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
+  flex-shrink: 0;
+  height: 28px;
+  padding: 0 14px;
+  border-radius: 100px;
+  font-size: 12px;
+  font-weight: 500;
+  font-family: var(--font);
+  background: var(--white);
+  border: 1px solid var(--border);
+  color: var(--t2);
+  cursor: pointer;
+  transition: all .15s;
+}
+.mob-chip.on {
+  background: var(--p);
+  border-color: var(--p);
+  color: #fff;
+  font-weight: 600;
+}
+
+/* ─── MOBILE BOTTOM CARD — horizontal scroll ──────── */
+#mobile-card {
+  display: none;
+  position: fixed;
+  bottom: 0; right: 0; left: 0;
+  z-index: 90;
+  background: transparent;
+  padding-bottom: env(safe-area-inset-bottom, 12px);
+  pointer-events: none;
+}
+
+.mob-card-handle { display: none; }
+
+/* نوار اسکرول افقی */
+#mob-card-list {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  gap: 10px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  padding: 8px 16px 14px;
+  pointer-events: auto;
+}
+#mob-card-list::-webkit-scrollbar { display: none; }
+
+.mob-card-count { display: none; }
+
+/* هر کارت — full width مثل نشان */
+.mob-card-item {
+  flex: 0 0 auto;
+  width: calc(100vw - 32px);
+  max-width: 420px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  background: var(--white);
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+  cursor: pointer;
+  transition: transform .15s;
+  scroll-snap-align: center;
+}
+.mob-card-item:active { transform: scale(0.98); }
+
+/* آیکون نوع مغازه */
+.mob-card-icon {
+  flex-shrink: 0;
+  width: 48px; height: 48px;
+  border-radius: 12px;
+  background: #FEF3EE;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px;
+}
+
+.mob-card-info { flex: 1; min-width: 0; }
+
+.mob-card-name {
+  font-size: 15px; font-weight: 700;
+  color: var(--t1); margin-bottom: 5px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.mob-card-badge {
+  display: inline-flex; align-items: center;
+  font-size: 11px; font-weight: 600;
+  padding: 2px 10px; border-radius: 100px;
+  margin-bottom: 6px;
+}
+.mob-card-addr {
+  font-size: 12px; color: var(--t2); line-height: 1.5;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.mob-card-phone {
+  font-size: 12px; color: var(--t3);
+  margin-top: 3px; direction: ltr; text-align: right;
+}
+
+/* فلش سمت چپ */
+.mob-card-arrow {
+  flex-shrink: 0;
+  color: var(--t3);
+  font-size: 20px;
+}
+
+/* ─── MOBILE MENU BUTTON ─── */
+.mob-menu-btn {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 34px; height: 34px;
+  border-radius: var(--br);
+  background: none;
+  border: 1px solid var(--border);
+  cursor: pointer;
+  color: var(--t1);
+  flex-shrink: 0;
+}
+.mob-menu-btn .material-icons-round { font-size: 20px; }
+
+/* ─── MOBILE MENU DRAWER ─── */
+#mob-menu-drawer {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 20000;
+  background: rgba(26,25,22,0.45);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+}
+#mob-menu-drawer.open { display: block; }
+
+#mob-menu-panel {
+  position: absolute;
+  top: 0; left: 0;
+  width: 80vw; max-width: 280px;
+  height: 100%;
+  background: var(--bg);
+  box-shadow: 4px 0 24px rgba(0,0,0,0.12);
+  display: flex; flex-direction: column;
+  transform: translateX(-100%);
+  transition: transform 0.28s cubic-bezier(0.4,0,0.2,1);
+}
+#mob-menu-drawer.open #mob-menu-panel { transform: translateX(0); }
+
+.mob-menu-header {
+  display: flex; align-items: center;
+  justify-content: space-between;
+  padding: 16px 16px;
+  border-bottom: 1px solid var(--border);
+}
+.mob-menu-logo { display: flex; align-items: center; gap: 8px; }
+
+.mob-menu-nav {
+  display: flex; flex-direction: column;
+  padding: 8px 0;
+  overflow-y: auto;
+  flex: 1;
+}
+.mob-menu-item {
+  display: flex; align-items: center;
+  gap: 12px;
+  padding: 14px 20px;
+  font-size: 14px; font-weight: 500;
+  color: var(--t1);
+  text-decoration: none;
+  transition: background .15s;
+  border-radius: 0;
+}
+.mob-menu-item:active { background: var(--md-sys-color-surface-variant); }
+.mob-menu-item .material-icons-round { font-size: 20px; color: var(--t3); }
+
+@media (max-width: 768px) {
+  .mob-menu-btn { display: flex; }
+  /* سرچ کمی کوچیک‌تر تا جا باز شه */
+  .topbar-search { max-width: unset; flex: 1; min-width: 0; }
+}/* ─── POPUP GALLERY ─── */
+.popup-gallery {
+  margin: 0 0 14px;
+  padding: 0 16px;
+}
+.popup-gallery-label {
+  font-size: 12px;
+  color: var(--t3);
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  direction: rtl;
+}
+.popup-gallery-track {
+  display: flex;
+  flex-direction: row;
+  gap: 8px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+  scroll-snap-type: x mandatory;
+  padding-left: 20px; /* نصفه دیده شدن آخری */
+}
+.popup-gallery-track::-webkit-scrollbar { display: none; }
+.popup-gallery-slide {
+  flex: 0 0 120px;
+  height: 120px;
+  border-radius: 10px;
+  overflow: hidden;
+  scroll-snap-align: start;
+  background: var(--surface-dim);
+  cursor: zoom-in;
+}
+.popup-gallery-slide img {
+  width: 120px; height: 120px;
+  object-fit: cover;
+  display: block;
+}
+.gallery-nav { display: none; }
+.gallery-dots { display: none; }
+
+/* ─── LIGHTBOX ─── */
+#lightbox {
+  display: none; position: fixed; inset: 0; z-index: 99999;
+  background: rgba(0,0,0,0.92);
+  align-items: center; justify-content: center;
+  flex-direction: column;
+}
+#lightbox.open { display: flex; }
+#lightbox img {
+  max-width: 92vw; max-height: 80vh;
+  border-radius: 8px; object-fit: contain;
+}
+#lightbox-close {
+  position: absolute; top: 16px; left: 16px;
+  background: rgba(255,255,255,0.15); border: none; color: #fff;
+  width: 36px; height: 36px; border-radius: 50%;
+  font-size: 20px; cursor: pointer; display: flex;
+  align-items: center; justify-content: center;
+}
+#lightbox-counter {
+  color: rgba(255,255,255,0.7); font-size: 13px;
+  margin-top: 12px; font-family: var(--font);
+}
+#lightbox-prev, #lightbox-next {
+  position: absolute; top: 50%; transform: translateY(-50%);
+  background: rgba(255,255,255,0.15); border: none; color: #fff;
+  width: 44px; height: 44px; border-radius: 50%;
+  font-size: 24px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+}
+#lightbox-prev { right: 16px; }
+#lightbox-next { left: 16px; }
+
+</style>
+</head>
+<body>
+
+<!-- ════ POPUP ════ -->
+<!-- POPUP -->
+<div id="popup-overlay">
+  <div id="popup-card">
+    <div class="popup-logo-row">
+      <div class="popup-logo-icon">⚜</div>
+      <div class="popup-logo-name">Zoomi</div>
+    </div>
+    <div class="popup-divider"></div>
+    <h1>نزدیک‌ترین طلافروشی‌ها<br>روی نقشه</h1>
+    <p class="popup-sub">قیمت لحظه‌ای · تأیید شده · بدون واسطه</p>
+    <div class="popup-pills">
+      <span class="popup-pill">✓ تأیید شده</span>
+      <span class="popup-pill">⟳ قیمت زنده</span>
+      <span class="popup-pill">◎ نزدیک‌ترین</span>
+    </div>
+    <button class="start-btn" onclick="startApp()">مشاهده نقشه</button>
+    <div style="margin-top:16px">
+      <a href="#" onclick="showSection('landing');return false;" style="font-size:13px;color:var(--t2);text-decoration:none;border-bottom:1px solid var(--border)">رفتن به سایت</a>
+    </div>
+  </div>
+</div>
+
+<!-- LIGHTBOX -->
+<div id="lightbox" onclick="closeLightbox()">
+  <button id="lightbox-close" onclick="closeLightbox()">✕</button>
+  <button id="lightbox-prev" onclick="event.stopPropagation();lightboxNav(-1)">›</button>
+  <img id="lightbox-img" src="" alt="">
+  <div id="lightbox-counter"></div>
+  <button id="lightbox-next" onclick="event.stopPropagation();lightboxNav(1)">‹</button>
+</div>
+
+<!-- MOBILE BOTTOM SHEET -->
+<div id="mob-sheet-overlay" onclick="closeMobSheet()" style="display:none;position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,0)"></div>
+<div id="mob-sheet" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:9001;background:var(--white);border-radius:20px 20px 0 0;box-shadow:0 -4px 24px rgba(0,0,0,0.15);max-height:90vh;overflow-y:auto;direction:rtl;font-family:var(--font);transform:translateY(100%);transition:transform .35s cubic-bezier(0.4,0,0.2,1)">
+  <div id="mob-sheet-handle" style="width:40px;height:4px;background:var(--border);border-radius:2px;margin:12px auto 0"></div>
+  <div id="mob-sheet-content" style="padding:16px"></div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <!-- TOPBAR -->
+  <div id="topbar" style="justify-content:space-between;direction:ltr">
+    <a class="topbar-logo" href="#" onclick="showSection('landing');return false;">
+      <div class="logo-icon">⚜</div>
+      <div>
+        <div class="logo-text">Zoomi</div>
+        <div class="logo-sub">نقشه فلزات گرانبها</div>
+      </div>
+    </a>
+    <div style="display:flex;gap:8px;align-items:center">
+      <button id="pwa-install-btn" onclick="installPWA()" style="display:none;height:36px;padding:0 14px;border-radius:8px;background:#C49A2A;color:#fff;font-family:'Vazirmatn',sans-serif;font-size:13px;font-weight:600;border:none;cursor:pointer;align-items:center;gap:6px">
+        <span class="material-icons-round" style="font-size:16px">download</span>
+        <span>نصب اپ</span>
+      </button>
+      <button class="topbar-chip" id="locate-btn" onclick="locateMe()">
+        <span class="material-icons-round">my_location</span>
+        <span class="topbar-chip-text">موقعیت من</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- MOBILE FILTER BAR -->
+  <div id="mobile-filter-bar">
+    <button class="mob-chip on" onclick="mobFilter('all',this)">همه</button>
+    <button class="mob-chip" onclick="mobFilter('gold',this)">فروشگاه‌های طلا</button>
+    <button class="mob-chip" onclick="mobFilter('silver',this)">فروشگاه‌های نقره</button>
+  </div>
+
+  <!-- MOBILE BOTTOM CARD -->
+  <div id="mobile-card">
+    <div class="mob-card-handle"></div>
+    <div id="mob-card-list"></div>
+  </div>
+
+  <!-- SIDEBAR -->
+  <div id="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-title">فهرست مغازه‌ها</div>
+      <div class="sidebar-count" id="shop-count">۱۴ <span>مغازه یافت شد</span></div>
+    </div>
+    <div class="filter-carousel-wrap">
+    <div class="sidebar-filter" id="filter-carousel">
+      <button class="filter-chip active" onclick="applyFilter('all', this)">همه</button>
+      <button class="filter-chip" onclick="applyFilter('gold', this)">فروشگاه‌های طلا</button>
+      <button class="filter-chip" onclick="applyFilter('silver', this)">فروشگاه‌های نقره</button>
+    </div>
+    </div>
+    <div class="shops-scroll-wrap"><div class="shops-list" id="shops-list"></div></div>
+  </div>
+
+  <!-- MAP -->
+  <div id="map-container">
+    <div id="map"></div>
+      <div class="legend-item"><div class="legend-dot gold"></div>طلافروشی</div>
+      <div class="legend-item"><div class="legend-dot silver"></div>نقره‌فروشی</div>
+      <div class="legend-item"><div class="legend-dot jewelry"></div>جواهرفروشی</div>
+      <div class="legend-item"><div class="legend-dot coin"></div>سکه‌فروشی</div>
+    </div>
+  </div>
+</div>
+
+<!-- ════ MAP VIEW ════ -->
+
+<!-- ════ LANDING VIEW ════ -->
+<div id="landing-view">
+<!-- NAV -->
+<nav class="nav">
+  <div class="wrap">
+    <span class="nav-logo">Zoomi</span>
+    <ul class="nav-links">
+      <li class="nav-mob-hide"><a href="#buyers" onclick="document.getElementById('buyers').scrollIntoView({behavior:'smooth'});return false;">برای خریدار و فروشنده</a></li>
+      <li class="nav-mob-hide"><a href="#faq" onclick="document.getElementById('faq').scrollIntoView({behavior:'smooth'});return false;">سؤالات متداول</a></li>
+      <li><a href="#register" onclick="scrollToSection('contact');setTimeout(()=>document.getElementById('register').scrollIntoView({behavior:'smooth',block:'start'}),400);return false;">ثبت طلافروشی</a></li>
+      <li><a href="#support" onclick="scrollToSection('contact');setTimeout(()=>document.getElementById('support').scrollIntoView({behavior:'smooth',block:'start'}),400);return false;">پشتیبانی</a></li>
+    </ul>
+    <button onclick="showSection('map')" style="height:36px;padding:0 18px;border-radius:8px;background:transparent;color:#D97757;font-family:'Vazirmatn',sans-serif;font-size:14px;font-weight:600;border:1px solid #D97757;cursor:pointer" onmouseover="this.style.background='#FEF3EE'" onmouseout="this.style.background='transparent'">مشاهده نقشه</button>
+    <button id="pwa-install-btn" onclick="installPWA()" style="display:none;height:36px;padding:0 14px;border-radius:8px;background:#C49A2A;color:#fff;font-family:'Vazirmatn',sans-serif;font-size:13px;font-weight:600;border:none;cursor:pointer;display:none;align-items:center;gap:6px;transition:background .15s" onmouseover="this.style.background='#a8821f'" onmouseout="this.style.background='#C49A2A'">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="white"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+      نصب اپ
+    </button>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="wrap">
+    <div class="hero-grid">
+
+      <!-- نقشه سمت راست -->
+      <div class="hero-map fade">
+        <div class="map-grid">
+          <div class="pin" style="top:26%;right:38%">
+            <div class="pin-head"><span>⚜</span></div>
+            <div class="pin-label">طلا و جواهر نوری</div>
+          </div>
+          <div class="pin" style="top:50%;right:57%">
+            <div class="pin-head"><span>⚜</span></div>
+            <div class="pin-label">طلافروشی پاسارگاد</div>
+          </div>
+          <div class="pin" style="top:40%;right:16%">
+            <div class="pin-head"><span>⚜</span></div>
+            <div class="pin-label">جواهر سپهر</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- محتوا سمت چپ -->
+      <div class="fade" style="transition-delay:.1s">
+        <p class="hero-eyebrow">اولین پلتفرم شفاف قیمت طلا در ایران</p>
+        <h1 class="hero-h1">نزدیک‌ترین طلافروشی،<br>بهترین قیمت روی نقشه</h1>
+        <p class="hero-body">قیمت طلای ۱۸ Zoomi را بین صدها طلافروشی تأیید‌شده هر منطقه مقایسه کنید. شفافیت واقعی بازار طلا در یک صفحه.</p>
+        <div id="pwa-hero-install" style="display:none;margin-top:16px">
+          <button onclick="installPWA()" style="height:42px;padding:0 22px;border-radius:10px;background:#C49A2A;color:#fff;font-family:'Vazirmatn',sans-serif;font-size:14px;font-weight:700;border:none;cursor:pointer;display:flex;align-items:center;gap:8px;transition:background .15s;box-shadow:0 2px 12px rgba(196,154,42,0.3)" onmouseover="this.style.background='#a8821f'" onmouseout="this.style.background='#C49A2A'">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+            نصب اپ Zoomi
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- TABS -->
+<section class="sec" id="buyers">
+  <div class="wrap">
+
+    <div class="sw-wrap fade">
+      <div class="sw">
+        <button class="sw-btn" onclick="setTab('sellers',this)">برای فروشندگان</button>
+        <button class="sw-btn on" onclick="setTab('buyers',this)">برای خریداران</button>
+      </div>
+    </div>
+
+    <!-- خریداران -->
+    <div class="tab on" id="tab-buyers">
+      <div class="sec-center fade">
+        <h2>خرید طلا برای خریداران</h2>
+        <p>دیگر لازم نیست به چند مغازه سر بزنید. Zoomi قیمت‌ها را بررسی می‌کند</p>
+      </div>
+      <div class="cards">
+        <div class="card fade">
+          <div class="card-t">نزدیک‌ترین طلافروشی</div>
+          <p class="card-b">با نقشه تعاملی طلافروشی‌های تأیید‌شده را پیدا کنید، فاصله و قیمت را فیلتر کنید</p>
+        </div>
+        <div class="card fade" style="transition-delay:.06s">
+          <div class="card-t">مقایسه قیمت لحظه‌ای</div>
+          <p class="card-b">قیمت طلا ۱۸ Zoomi را بین دهها فروشنده مقایسه کنید و بهترین را انتخاب کنید</p>
+        </div>
+        <div class="card fade" style="transition-delay:.12s">
+          <div class="card-t">نزدیک‌ترین طلافروشی</div>
+          <p class="card-b">با نقشه تعاملی، فاصله و قیمت فیلتر کنید و بهترین گزینه را پیدا کنید</p>
+        </div>
+        <div class="card fade" style="transition-delay:.18s">
+          <div class="card-t">اطلاعات کامل فروشگاه</div>
+          <p class="card-b">قبل از مراجعه حضوری، از آدرس دقیق، تلفن و اعتبار طلافروشی مطلع شوید</p>
+        </div>
+      </div>
+      <div class="tab-cta fade">
+        <a href="#" onclick="showSection('map');return false;" class="btn btn-p" style="text-decoration:none">جستجوی طلافروشی</a>
+      </div>
+    </div>
+
+    <!-- فروشندگان -->
+    <div class="tab" id="tab-sellers">
+      <div class="sec-center fade">
+        <h2>فروش طلا برای فروشندگان</h2>
+        <p>مغازه‌تان را رایگان ثبت کنید و مشتریان بیشتری جذب کنید</p>
+      </div>
+      <div class="cards">
+        <div class="card fade">
+          <div class="card-t">ثبت رایگان مغازه</div>
+          <p class="card-b">در کمتر از ۵ دقیقه مغازه‌تان را روی نقشه Zoomi ثبت کنید و دیده شوید</p>
+        </div>
+        <div class="card fade" style="transition-delay:.06s">
+          <div class="card-t">بدون کارمزد</div>
+          <p class="card-b">هیچ کارمزد یا واسطه‌ای وجود ندارد. مستقیم با مشتری در ارتباط باشید</p>
+        </div>
+        <div class="card fade" style="transition-delay:.12s">
+          <div class="card-t">مشتریان بیشتر</div>
+          <p class="card-b">با حضور در Zoomi مشتریانی که در منطقه شما دنبال طلا هستند شما را پیدا می‌کنند</p>
+        </div>
+        <div class="card fade" style="transition-delay:.18s">
+          <div class="card-t">تأیید هویت</div>
+          <p class="card-b">نشان «تأیید شده» Zoomi اعتماد مشتریان را جلب و تمایز شما را نشان می‌دهد</p>
+        </div>
+      </div>
+      <div class="tab-cta fade">
+        <a href="#register" onclick="scrollToSection('contact');setTimeout(()=>document.getElementById('register').scrollIntoView({behavior:'smooth',block:'start'}),400);return false;" class="btn btn-p" style="text-decoration:none">ثبت طلافروشی</a>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- FAQ -->
+<section class="sec" id="faq">
+  <div class="wrap">
+    <div class="sec-center fade">
+      <h2>خرید طلا برای خریداران</h2>
+      <p>دیگر لازم نیست به چند مغازه سر بزنید. Zoomi قیمت‌ها را بررسی می‌کند</p>
+    </div>
+    <div class="faq-list">
+      <div class="faq-item fade"><button class="faq-q" onclick="faq(this)"><span>چطور می‌توانم طلافروشی نزدیک خودم را پیدا کنم؟</span><div class="faq-ico"></div></button><div class="faq-ans">با وارد کردن نام محله یا شهر در کادر جستجو، نقشه‌ای از طلافروشی‌های تأیید‌شده آن منطقه نمایش داده می‌شود. می‌توانید بر اساس فاصله یا نوع مغازه فیلتر کنید.</div></div>
+      <div class="faq-item fade"><button class="faq-q" onclick="faq(this)"><span>ثبت طلافروشی در Zoomi رایگان است؟</span><div class="faq-ico"></div></button><div class="faq-ans">بله، ثبت اولیه کاملاً رایگان است. کافی است فرم ثبت را پر کنید تا تیم ما در اسرع وقت با شما تماس بگیرد.</div></div>
+      <div class="faq-item fade"><button class="faq-q" onclick="faq(this)"><span>چطور مطمئن شوم که اطلاعات فروشگاه‌ها معتبر است؟</span><div class="faq-ico"></div></button><div class="faq-ans">تمام فروشگاه‌های موجود در Zoomi پیش از انتشار توسط تیم ما احراز هویت می‌شوند. فروشگاه‌های تأیید‌شده نشان مخصوص دریافت می‌کنند.</div></div>
+      <div class="faq-item fade"><button class="faq-q" onclick="faq(this)"><span>آیا امکان تماس مستقیم با فروشنده وجود دارد؟</span><div class="faq-ico"></div></button><div class="faq-ans">بله. با کلیک روی هر فروشگاه در نقشه، شماره تلفن مستقیم آن نمایش داده می‌شود و می‌توانید بدون واسطه تماس بگیرید.</div></div>
+      <div class="faq-item fade"><button class="faq-q" onclick="faq(this)"><span>آیا Zoomi در شهرهای دیگر هم فعال است؟</span><div class="faq-ico"></div></button><div class="faq-ans">Zoomi در حال گسترش به سراسر ایران است. در حال حاضر تهران و مشهد پوشش کامل دارند و به‌زودی سایر شهرهای بزرگ اضافه می‌شوند.</div></div>
+      <div class="faq-item fade"><button class="faq-q" onclick="faq(this)"><span>اطلاعات شخصی من در فرم‌ها امن است؟</span><div class="faq-ico"></div></button><div class="faq-ans">اطلاعات شما فقط برای تماس و پشتیبانی استفاده می‌شود و هرگز با اشخاص ثالث به اشتراک گذاشته نمی‌شود.</div></div>
+      <div class="faq-item fade"><button class="faq-q" onclick="faq(this)"><span>چطور می‌توانم یک خطا یا اطلاعات اشتباه را گزارش دهم؟</span><div class="faq-ico"></div></button><div class="faq-ans">از طریق فرم «ارتباط با پشتیبانی» در همین صفحه می‌توانید هر مشکل یا خطایی را گزارش دهید. تیم ما در کمترین زمان پیگیری خواهد کرد.</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- FORMS -->
+<section class="sec" id="contact">
+  <div class="wrap">
+    <div class="sec-center fade" style="margin-bottom:32px">
+      <h2>با ما در ارتباط باشید</h2>
+      <p>هر سوال یا درخواستی دارید، یا می‌خواهید طلافروشی‌تان را ثبت کنید</p>
+    </div>
+    <div class="lf-grid">
+
+      <!-- ارتباط با پشتیبانی -->
+      <div class="lf-card fade" id="support">
+        <h2 class="lf-card-title">ارتباط با پشتیبانی</h2>
+        <div class="lf-fields">
+          <div class="lf-fld">
+            <label class="lf-label">نام</label>
+            <input id="sup-name" class="lf-inp" type="text" placeholder="نام" autocomplete="off">
+          </div>
+          <div class="lf-fld">
+            <label class="lf-label">نام خانوادگی</label>
+            <input id="sup-lastname" class="lf-inp" type="text" placeholder="نام خانوادگی" autocomplete="off">
+          </div>
+          <div class="lf-fld">
+            <label class="lf-label">شماره تماس</label>
+            <input id="sup-phone" class="lf-inp" type="tel" placeholder="شماره تماس" dir="ltr" style="text-align:right" autocomplete="off">
+          </div>
+          <div class="lf-fld" style="flex:1;display:flex;flex-direction:column">
+            <label class="lf-label">متن</label>
+            <textarea id="sup-message" class="lf-ta" placeholder="مثال: با مشکل روبرو هستم" autocomplete="off" style="flex:1;min-height:160px;resize:none"></textarea>
+          </div>
+        </div>
+        <div style="margin-top:16px;display:flex;align-items:center;gap:12px">
+          <button id="sup-btn" onclick="submitSupport()" style="height:36px;padding:0 20px;border-radius:8px;background:transparent;color:#D97757;font-family:'Vazirmatn',sans-serif;font-size:14px;font-weight:600;border:1px solid #D97757;cursor:pointer" onmouseover="this.style.background='#FEF3EE'" onmouseout="this.style.background='transparent'">ارسال</button>
+          <span id="sup-status" style="display:none;font-size:13px;font-family:'Vazirmatn',sans-serif"></span>
+        </div>
+
+        <!-- ارتباط مستقیم -->
+        <div style="margin-top:20px;padding-top:16px;border-top:1px solid #F0EAD6;display:flex;align-items:center;justify-content:space-between;gap:12px;direction:rtl">
+          <p style="font-family:'Vazirmatn',sans-serif;font-size:14px;font-weight:600;color:#555;margin:0;white-space:nowrap">یا از طریق پیام‌رسان‌ها تماس بگیرید:</p>
+          <div style="display:flex;gap:20px;direction:ltr">
+
+            <!-- روبیکا -->
+            <a href="https://rubika.ir/YOUR_RUBIKA_ID" target="_blank" rel="noopener"
+               title="ارتباط مستقیم در روبیکا"
+               style="display:flex;flex-direction:column;align-items:center;gap:6px;text-decoration:none;opacity:.75;transition:opacity .15s"
+               onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='.75'">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 4C7.58 4 4 7.58 4 12C4 13.85 4.63 15.55 5.68 16.9L4.07 19.93L7.35 18.45C8.63 19.44 10.25 20 12 20C16.42 20 20 16.42 20 12C20 7.58 16.42 4 12 4Z" fill="#8B5CF6"/>
+                <circle cx="9" cy="12" r="1.3" fill="white"/>
+                <circle cx="12" cy="12" r="1.3" fill="white"/>
+                <circle cx="15" cy="12" r="1.3" fill="white"/>
+              </svg>
+              <span style="font-family:'Vazirmatn',sans-serif;font-size:10px;color:#888">روبیکا</span>
+            </a>
+
+            <!-- بله -->
+            <a href="https://ble.ir/YOUR_BALE_ID" target="_blank" rel="noopener"
+               title="ارتباط مستقیم در بله"
+               style="display:flex;flex-direction:column;align-items:center;gap:6px;text-decoration:none;opacity:.75;transition:opacity .15s"
+               onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='.75'">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect x="3" y="5" width="18" height="14" rx="3" fill="#2196F3"/>
+                <path d="M3 8.5L12 13.5L21 8.5" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+              </svg>
+              <span style="font-family:'Vazirmatn',sans-serif;font-size:10px;color:#888">بله</span>
+            </a>
+
+            <!-- تلگرام -->
+            <a href="https://t.me/YOUR_TELEGRAM_ID" target="_blank" rel="noopener"
+               title="ارتباط مستقیم در تلگرام"
+               style="display:flex;flex-direction:column;align-items:center;gap:6px;text-decoration:none;opacity:.75;transition:opacity .15s"
+               onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='.75'">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="#29B6F6" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2Z"/>
+                <path d="M9.78 16.65L10.06 12.42L17.74 5.5C18.08 5.19 17.67 5.04 17.22 5.31L7.74 11.3L3.64 10C2.76 9.75 2.75 9.14 3.84 8.7L19.81 2.54C20.54 2.21 21.24 2.72 20.96 3.84L18.24 16.65C18.05 17.56 17.5 17.78 16.74 17.36L12.6 14.3L10.61 16.23C10.38 16.46 10.19 16.65 9.78 16.65Z" fill="white"/>
+              </svg>
+              <span style="font-family:'Vazirmatn',sans-serif;font-size:10px;color:#888">تلگرام</span>
+            </a>
+
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ثبت طلافروشی -->
+      <div class="lf-card fade" id="register" style="transition-delay:.1s">
+        <h2 class="lf-card-title">ثبت طلافروشی رایگان</h2>
+        <div class="lf-fields">
+          <div class="lf-row2">
+            <div class="lf-fld">
+              <label class="lf-label">نام</label>
+              <input id="reg-name" class="lf-inp" type="text" placeholder="نام خود را وارد کنید" autocomplete="off">
+            </div>
+            <div class="lf-fld">
+              <label class="lf-label">شماره تماس</label>
+              <input id="reg-phone" class="lf-inp" type="tel" placeholder="شماره تماس" dir="ltr" style="text-align:right" autocomplete="off">
+            </div>
+          </div>
+          <div class="lf-fld">
+            <label class="lf-label">آدرس</label>
+            <input id="reg-address" class="lf-inp" type="text" placeholder="مثال: آدرس را وارد نمایید" autocomplete="off">
+          </div>
+          <div class="lf-fld">
+            <label class="lf-label">یادداشت (اختیاری)</label>
+            <textarea id="reg-note" class="lf-ta" placeholder="هر توضیح اضافه‌ای اینجا بنویسید" autocomplete="off"></textarea>
+          </div>
+          <div class="lf-fld">
+            <label class="lf-label">تصاویر موجودی مغازه (اختیاری)</label>
+            <div id="reg-upload-area" onclick="document.getElementById('reg-photos').click()" style="border:2px dashed #D4C5A0;border-radius:12px;padding:24px 16px;text-align:center;cursor:pointer;background:#FEFAF0;transition:border-color .2s">
+              <span class="material-icons-round" style="font-size:32px;color:#C49A2A;display:block;margin-bottom:8px">add_photo_alternate</span>
+              <div style="font-size:13px;color:#7B6B4A;font-family:'Vazirmatn',sans-serif">برای آپلود عکس کلیک کنید</div>
+              <div style="font-size:11px;color:#A09070;margin-top:4px;font-family:'Vazirmatn',sans-serif">حداکثر ۷ عکس · JPG، PNG · تا ۱۰ مگابایت هر عکس</div>
+            </div>
+            <input id="reg-photos" type="file" accept="image/*" multiple style="display:none" onchange="handlePhotoSelect(this)">
+            <div id="reg-photo-preview" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px"></div>
+          </div>
+        </div>
+        <div style="margin-top:16px;display:flex;align-items:center;gap:12px">
+          <button id="reg-btn" onclick="submitRegister()" style="height:36px;padding:0 20px;border-radius:8px;background:transparent;color:#D97757;font-family:'Vazirmatn',sans-serif;font-size:14px;font-weight:600;border:1px solid #D97757;cursor:pointer" onmouseover="this.style.background='#FEF3EE'" onmouseout="this.style.background='transparent'">ثبت رایگان</button>
+          <span id="reg-status" style="display:none;font-size:13px;font-family:'Vazirmatn',sans-serif"></span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="wrap">
+    <div class="ft-top">
+      <div>
+        <div class="ft-logo">Zoomi</div>
+        <p class="ft-tag">اولین پلتفرم شفافیت قیمت طلا در ایران. بدون واسطه، بدون کارمزد — فقط قیمت واقعی بازار.</p>
+        <div class="ft-badge">تأیید‌شده · شفاف · لحظه‌ای</div>
+      </div>
+      <div class="ft-col">
+        <div class="ft-col-t">برای خریداران</div>
+        <ul>
+          <li><a href="#" onclick="showSection('map');return false;">جستجوی طلافروشی</a></li>
+          <li><a href="#" onclick="scrollToSection('contact');return false;">پشتیبانی</a></li>
+        </ul>
+      </div>
+      <div class="ft-col">
+        <div class="ft-col-t">برای فروشندگان</div>
+        <ul>
+          <li><a href="#" onclick="scrollToSection('contact');return false;">ثبت رایگان مغازه</a></li>
+          <li><a href="#" onclick="scrollToSection('faq');return false;">سؤالات متداول</a></li>
+          <li><a href="#" onclick="scrollToSection('contact');return false;">تماس با ما</a></li>
+        </ul>
+      </div>
+      <div class="ft-col">
+        <div class="ft-col-t">Zoomi</div>
+        <ul>
+          <li><a href="#" onclick="scrollToSection('contact');return false;">ارتباط با ما</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="ft-bottom">
+      <span>© ۱۴۰۳ Zoomi — تمام حقوق محفوظ است</span>
+      <span>ساخته شده برای شفافیت بازار طلای ایران</span>
+    </div>
+  </div>
+</footer>
+
+
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+const SHEETS_URL = 'https://script.google.com/macros/s/AKfycby1_jyYatHl6wnWXIZ9W9BF6BjkAjpZqIqo-bu5SMOZagG75rEibPu16RrScCDxp5KBIw/exec';
+
+async function submitSupport() {
+  const name=document.getElementById('sup-name').value.trim();
+  const lastname=document.getElementById('sup-lastname').value.trim();
+  const fullname = lastname ? name + ' ' + lastname : name;
+  const phone=document.getElementById('sup-phone').value.trim();
+  const message=document.getElementById('sup-message').value.trim();
+  const btn=document.getElementById('sup-btn');
+  const status=document.getElementById('sup-status');
+  if(!name||!phone||!message){status.style.display='inline';status.style.color='#BA1A1A';status.textContent='همه فیلدها را پر کنید';return;}
+  btn.disabled=true;btn.textContent='⏳ ارسال...';status.style.display='none';
+  try{
+    await fetch(SHEETS_URL,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({type:'support',name:fullname,phone,message})});
+    status.style.display='inline';status.style.color='#386A20';status.textContent='✓ پیام ارسال شد';
+    document.getElementById('sup-name').value='';document.getElementById('sup-lastname').value='';document.getElementById('sup-phone').value='';document.getElementById('sup-message').value='';
+  }catch(e){status.style.display='inline';status.style.color='#BA1A1A';status.textContent='خطا، دوباره امتحان کنید';}
+  btn.disabled=false;btn.textContent='ارسال';
+}
+
+let selectedPhotos = [];
+
+function handlePhotoSelect(input) {
+  const files = Array.from(input.files);
+  const maxSize = 10 * 1024 * 1024;
+  const newFiles = files.filter(f => {
+    if (f.size > maxSize) { alert(`فایل ${f.name} بیش از ۱۰ مگابایت است`); return false; }
+    return true;
+  });
+  // اضافه کردن به قبلی‌ها تا ۷ تا
+  selectedPhotos = [...selectedPhotos, ...newFiles].slice(0, 7);
+  renderPhotoPreview();
+}
+
+function renderPhotoPreview() {
+  const preview = document.getElementById('reg-photo-preview');
+  preview.innerHTML = selectedPhotos.map((f, i) => `
+    <div style="position:relative;width:72px;height:72px">
+      <img src="${URL.createObjectURL(f)}" style="width:72px;height:72px;object-fit:cover;border-radius:8px;border:1px solid #D4C5A0">
+      <button onclick="removePhoto(${i})" style="position:absolute;top:-6px;right:-6px;width:18px;height:18px;border-radius:50%;background:#7B3F2A;border:none;color:#fff;font-size:11px;cursor:pointer;line-height:1">✕</button>
+    </div>`).join('');
+  document.getElementById('reg-upload-area').style.borderColor = selectedPhotos.length ? '#C49A2A' : '#D4C5A0';
+  // آپدیت متن ناحیه آپلود
+  const hint = document.querySelector('#reg-upload-area div:last-child');
+  if (hint) hint.textContent = selectedPhotos.length < 7
+    ? `${selectedPhotos.length} عکس انتخاب شده · می‌توانید ${7 - selectedPhotos.length} عکس دیگر اضافه کنید`
+    : 'حداکثر ۷ عکس انتخاب شده';
+}
+
+function removePhoto(idx) {
+  selectedPhotos.splice(idx, 1);
+  renderPhotoPreview();
+}
+
+async function compressPhoto(file, maxWidth=1200, quality=0.75) {
+  return new Promise((resolve) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      const scale = Math.min(1, maxWidth / img.width);
+      const canvas = document.createElement('canvas');
+      canvas.width  = Math.round(img.width  * scale);
+      canvas.height = Math.round(img.height * scale);
+      canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+      resolve({ base64: canvas.toDataURL('image/jpeg', quality), mimeType: 'image/jpeg' });
+    };
+    img.onerror = () => resolve(null);
+    img.src = url;
+  });
+}
+
+async function submitRegister() {
+  const name    = document.getElementById('reg-name').value.trim();
+  const phone   = document.getElementById('reg-phone').value.trim();
+  const address = document.getElementById('reg-address').value.trim();
+  const note    = document.getElementById('reg-note') ? document.getElementById('reg-note').value.trim() : '';
+  const btn     = document.getElementById('reg-btn');
+  const status  = document.getElementById('reg-status');
+
+  if (!name || !phone || !address) {
+    status.style.display = 'inline'; status.style.color = '#BA1A1A';
+    status.textContent = 'نام، تلفن و آدرس اجباری هستند'; return;
+  }
+
+  btn.disabled = true; btn.textContent = '⏳ در حال ارسال...';
+  status.style.display = 'inline'; status.style.color = '#888';
+  status.textContent = selectedPhotos.length ? 'در حال آپلود تصاویر...' : 'در حال ارسال...';
+
+  try {
+    // آپلود عکس‌ها به Imgur
+    const photoLinks = [];
+    for (let i = 0; i < selectedPhotos.length; i++) {
+      status.textContent = `آپلود تصویر ${i+1} از ${selectedPhotos.length}...`;
+      const link = await uploadToImgur(selectedPhotos[i]);
+      photoLinks.push(link);
+    }
+
+    status.textContent = 'در حال ثبت اطلاعات...';
+    await fetch(SHEETS_URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify({ type: 'register', name, phone, address, note, photoLinks })
+    });
+
+    status.style.color = '#386A20';
+    status.textContent = '✓ درخواست ثبت شد' + (photoLinks.length ? ` (${photoLinks.length} تصویر)` : '');
+    ['reg-name','reg-phone','reg-address','reg-note'].forEach(id => {
+      const el = document.getElementById(id); if (el) el.value = '';
+    });
+    selectedPhotos = [];
+    document.getElementById('reg-photo-preview').innerHTML = '';
+    document.getElementById('reg-upload-area').style.borderColor = '#D4C5A0';
+    renderPhotoPreview();
+  } catch(e) {
+    status.style.color = '#BA1A1A';
+    status.textContent = 'خطا: ' + e.message;
+  }
+  btn.disabled = false; btn.textContent = 'ثبت رایگان';
+}
+</script>
+<script>
+function scrollToSection(id) {
+  showSection('landing');
+  setTimeout(() => {
+    const el = document.getElementById(id);
+    if (el) el.scrollIntoView({ behavior: 'smooth' });
+  }, 100);
+}
+
+function toggleMobMenu() {
+  const drawer = document.getElementById('mob-menu-drawer');
+  drawer.classList.toggle('open');
+}
+function closeMobMenu() {
+  document.getElementById('mob-menu-drawer').classList.remove('open');
+}
+
+/* ─── پاک کردن فرم‌ها با رفرش ─── */
+function clearAllForms() {
+  document.querySelectorAll('input:not([type="button"]):not([type="submit"]):not([type="search"]), textarea')
+    .forEach(el => { el.value = ''; });
+}
+window.addEventListener('pageshow', clearAllForms);
+window.addEventListener('DOMContentLoaded', clearAllForms);
+
+/* ─── drag-to-scroll برای فیلتر دسکتاپ ─── */
+(function() {
+  const el = document.getElementById('filter-carousel');
+  if (!el) return;
+  let isDown = false, startX, scrollLeft;
+  el.addEventListener('mousedown', e => {
+    isDown = true;
+    el.classList.add('dragging');
+    startX = e.pageX - el.offsetLeft;
+    scrollLeft = el.scrollLeft;
+  });
+  el.addEventListener('mouseleave', () => { isDown = false; el.classList.remove('dragging'); });
+  el.addEventListener('mouseup', () => { isDown = false; el.classList.remove('dragging'); });
+  el.addEventListener('mousemove', e => {
+    if (!isDown) return;
+    e.preventDefault();
+    const x = e.pageX - el.offsetLeft;
+    el.scrollLeft = scrollLeft - (x - startX);
+  });
+})();
+
+function pgScroll(shopId, dir) {
+  const track = document.getElementById('pgt-' + shopId);
+  if (track) track.scrollBy({ left: dir * 136, behavior: 'smooth' });
+}
+
+/* ─── GALLERY ─── */
+const galleryState = {};
+
+function galleryNav(shopId, dir) {
+  const photos = (SHOPS.find(s => s.id == shopId) || {}).photos || [];
+  if (!photos.length) return;
+  if (!galleryState[shopId]) galleryState[shopId] = 0;
+  galleryState[shopId] = (galleryState[shopId] + dir + photos.length) % photos.length;
+  updateGallery(shopId);
+}
+
+function galleryGoTo(shopId, idx) {
+  galleryState[shopId] = idx;
+  updateGallery(shopId);
+}
+
+function updateGallery(shopId) {
+  const track = document.getElementById(`gallery-${shopId}`);
+  if (!track) return;
+  const idx = galleryState[shopId] || 0;
+  track.style.transform = `translateX(${idx * 100}%)`;
+  track.closest('.popup-gallery').querySelectorAll('.gallery-dot')
+    .forEach((d, i) => d.classList.toggle('active', i === idx));
+}
+
+/* ─── LIGHTBOX ─── */
+let lbPhotos = [], lbIndex = 0;
+
+function openLightbox(shopId, idx) {
+  const shop = SHOPS.find(s => s.id == shopId);
+  if (!shop || !shop.photos.length) return;
+  lbPhotos = shop.photos;
+  lbIndex = idx;
+  updateLightbox();
+  document.getElementById('lightbox').classList.add('open');
+}
+
+function closeLightbox() {
+  document.getElementById('lightbox').classList.remove('open');
+}
+
+function lightboxNav(dir) {
+  lbIndex = (lbIndex + dir + lbPhotos.length) % lbPhotos.length;
+  updateLightbox();
+}
+
+function updateLightbox() {
+  document.getElementById('lightbox-img').src = lbPhotos[lbIndex];
+  document.getElementById('lightbox-counter').textContent = `${lbIndex + 1} / ${lbPhotos.length}`;
+}
+
+document.addEventListener('keydown', e => {
+  const lb = document.getElementById('lightbox');
+  if (!lb.classList.contains('open')) return;
+  if (e.key === 'Escape') closeLightbox();
+  if (e.key === 'ArrowRight') lightboxNav(-1);
+  if (e.key === 'ArrowLeft') lightboxNav(1);
+});
+
+/* ════ SECTION MANAGER ════ */
+function goToMap() {
+  const q = document.getElementById('hero-search-inp') ? document.getElementById('hero-search-inp').value : '';
+  showSection('map');
+  if (q) {
+    setTimeout(() => {
+      const inp = document.getElementById('search-input');
+      if (inp) { inp.value = q; filterShops(q); }
+    }, 300);
+  }
+}
+
+function showSection(section) {
+  const mapApp = document.getElementById('app');
+  const landingView = document.getElementById('landing-view');
+  const backBtn = document.getElementById('back-to-landing');
+  const popup = document.getElementById('popup-overlay');
+  if (popup) popup.style.display = 'none';
+
+  if (section === 'map') {
+    document.body.classList.add('map-mode');
+    mapApp.style.display = 'flex';
+    landingView.style.display = 'none';
+    backBtn.style.display = 'flex';
+    if (!window._mapInited) {
+      window._mapInited = true;
+      initMap();
+    }
+  } else {
+    document.body.classList.remove('map-mode');
+    document.body.scrollTop = 0;
+    document.documentElement.scrollTop = 0;
+    mapApp.style.display = 'none';
+    landingView.style.display = 'block';
+    backBtn.style.display = 'none';
+    setTimeout(() => {
+      document.querySelectorAll('#landing-view .fade').forEach(el => {
+        el.classList.remove('in');
+        setTimeout(() => el.classList.add('in'), 80);
+      });
+    }, 50);
+  }
+}
+
+/* ════ MAP JS ════ */
+
+const TYPE_LABELS = { gold:'طلافروشی', silver:'نقره‌فروشی', jewelry:'جواهرفروشی', coin:'سکه‌فروشی' };
+const TYPE_EMOJIS = { gold:'🥇', silver:'🥈', jewelry:'💎', coin:'🪙' };
+const TYPE_BADGE = { gold:'badge-gold', silver:'badge-silver', jewelry:'badge-jewelry', coin:'badge-coin' };
+const AVATAR_CLASS = { gold:'gold', silver:'silver', jewelry:'jewelry', coin:'coin' };
+
+let SHOPS = [];
+let map, markers = {}, activeId = null, currentFilter = 'all', searchQuery = '';
+
+function startApp() {
+  const overlay = document.getElementById('popup-overlay');
+  const card = document.getElementById('popup-card');
+  card.style.animation = 'popupExit 0.3s ease forwards';
+  overlay.style.animation = 'overlayExit 0.4s ease 0.15s forwards';
+  setTimeout(() => {
+    overlay.style.display = 'none';
+  }, 450);
+}
+
+// Map init handled by showSection()
+
+async function initMap() {
+  map = L.map('map', { zoomControl: false, attributionControl: false }).setView([35.700, 51.348], 14);
+
+  L.tileLayer('https://api.maptiler.com/maps/streets-v2/{z}/{x}/{y}.png?key=U6zIXNsUrOaXa96xyEEw', {
+    attribution: '© MapTiler © OpenStreetMap',
+    maxZoom: 20,
+    tileSize: 512,
+    zoomOffset: -1
+  }).addTo(map);
+
+  L.control.zoom({ position: 'bottomleft', zoomInText: '+', zoomOutText: '−' }).addTo(map);
+
+  await fetchShops();
+
+  // لوکیشن کاربر رو بگیر و نقشه رو روش ببر
+  autoLocate();
+}
+
+function autoLocate() {
+  if (!navigator.geolocation) return;
+
+  navigator.geolocation.getCurrentPosition(
+    pos => {
+      const lat = pos.coords.latitude;
+      const lng = pos.coords.longitude;
+      const acc = pos.coords.accuracy;
+
+      // برو روی موقعیت کاربر
+      map.setView([lat, lng], 15, { animate: true });
+
+      // مارکر موقعیت کاربر
+      if (userMarker) map.removeLayer(userMarker);
+      if (userCircle) map.removeLayer(userCircle);
+
+      userCircle = L.circle([lat, lng], {
+        radius: acc,
+        color: '#2196F3',
+        fillColor: '#2196F3',
+        fillOpacity: 0.08,
+        weight: 1
+      }).addTo(map);
+
+      userMarker = L.marker([lat, lng], {
+        icon: L.divIcon({
+          className: '',
+          html: `<div style="width:16px;height:16px;background:#2196F3;border:3px solid #fff;border-radius:50%;box-shadow:0 0 0 4px rgba(33,150,243,0.25)"></div>`,
+          iconSize: [16, 16],
+          iconAnchor: [8, 8]
+        }),
+        zIndexOffset: 1000
+      }).addTo(map);
+
+      userMarker.bindPopup(
+        `<div style="font-family:Vazirmatn,sans-serif;font-size:13px;direction:rtl;padding:4px">📍 موقعیت شما</div>`
+      );
+    },
+    err => {
+      // اگه دسترسی نداد، تهران رو نشون بده
+      console.log('Geolocation error:', err.message);
+    },
+    { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+  );
+}
+
+async function fetchShops() {
+  return new Promise((resolve) => {
+    const callbackName = 'cb_shops_' + Date.now();
+    const script = document.createElement('script');
+    const timeout = setTimeout(() => {
+      document.head.removeChild(script);
+      delete window[callbackName];
+      console.warn('fetchShops timeout');
+      SHOPS = [];
+      Object.values(markers).forEach(m => map.removeLayer(m));
+      markers = {};
+      renderSidebar();
+      renderMobCards();
+      resolve();
+    }, 5000);
+
+    window[callbackName] = function(data) {
+      clearTimeout(timeout);
+      document.head.removeChild(script);
+      delete window[callbackName];
+      SHOPS = data.map(s => ({
+        id:      s.id,
+        name:    s.name,
+        phone:   s.phone,
+        address: s.address,
+        type:    s.type || 'gold',
+        lat:     parseFloat(s.lat) || null,
+        lng:     parseFloat(s.lng) || null,
+        active:  s.active != 0 ? 1 : 0,
+        photos:  s.photos ? String(s.photos).split('\n').filter(l => l.trim()) : []
+      })).filter(s => s.active);
+
+      // نمایش مارکرها روی نقشه
+      Object.values(markers).forEach(m => map.removeLayer(m));
+      markers = {};
+      SHOPS.forEach(shop => { if(shop.lat && shop.lng) addMarker(shop); });
+      renderSidebar();
+      renderMobCards();
+      resolve();
+    };
+
+    script.src = `${SHEETS_URL}?action=shops&callback=${callbackName}`;
+    document.head.appendChild(script);
+  });
+}
+
+function createMarkerIcon(shop, isActive) {
+  const size = isActive ? 44 : 36;
+  return L.divIcon({
+    className: '',
+    html: `<div class="custom-marker ${AVATAR_CLASS[shop.type]} ${isActive ? 'active pulse' : ''}" style="width:${size}px;height:${size}px">
+             <span>${TYPE_EMOJIS[shop.type]}</span>
+           </div>`,
+    iconSize: [size, size],
+    iconAnchor: [isActive ? 22 : 18, size],
+    popupAnchor: [0, -size]
+  });
+}
+
+function addMarker(shop) {
+  const marker = L.marker([shop.lat, shop.lng], { icon: createMarkerIcon(shop, false) });
+
+  const photos = shop.photos || [];
+  const galleryHtml = photos.length ? `
+    <div class="popup-gallery">
+      <div class="popup-gallery-label">
+        <div style="display:flex;gap:4px">
+          <button onclick="pgScroll('${shop.id}',-1)" style="width:26px;height:26px;border-radius:50%;border:1px solid var(--border);background:var(--bg);cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center">‹</button>
+          <button onclick="pgScroll('${shop.id}',1)" style="width:26px;height:26px;border-radius:50%;border:1px solid var(--border);background:var(--bg);cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center">›</button>
+        </div>
+        <span>گالری تصاویر</span>
+      </div>
+      <div class="popup-gallery-track" id="pgt-${shop.id}">
+        ${photos.map((url, i) => `
+          <div class="popup-gallery-slide" onclick="openLightbox('${shop.id}',${i})">
+            <img src="${url}" alt="تصویر ${i+1}" loading="lazy">
+          </div>`).join('')}
+      </div>
+    </div>` : '';
+
+  const popupContent = `
+    <div class="map-popup">
+      <div class="map-popup-header">
+        <div></div>
+        <div class="map-popup-title">
+          <div class="map-popup-name">${shop.name}</div>
+          <span class="shop-type-badge ${TYPE_BADGE[shop.type]}">${TYPE_LABELS[shop.type]}</span>
+        </div>
+      </div>
+      ${galleryHtml}
+      ${photos.length ? '' : '<div class="map-popup-divider"></div>'}
+      <div class="map-popup-detail">
+        <span class="material-icons-round">location_on</span>
+        <span>${shop.address}</span>
+      </div>
+      <div class="map-popup-detail">
+        <span class="material-icons-round">phone</span>
+        <span dir="ltr">${shop.phone}</span>
+      </div>
+      <div class="map-popup-actions">
+        <button class="popup-action-btn" onclick="callShop('${shop.phone}')">
+          <span class="material-icons-round">call</span>تماس با فروشگاه
+        </button>
+      </div>
+    </div>`;
+
+  if (window.innerWidth > 768) {
+    marker.bindPopup(popupContent, { maxWidth: 300, className: '' });
+  }
+  marker.on('click', () => {
+    if (window.innerWidth <= 768) {
+      panToShop(shop.lat, shop.lng);
+      openMobSheet(shop);
+    } else {
+      selectShop(shop.id);
+    }
+  });
+  marker.addTo(map);
+  markers[shop.id] = marker;
+}
+
+function panToShop(lat, lng) {
+  // offset برای sidebar (دسکتاپ) و هدر
+  const isMob = window.innerWidth <= 768;
+  const offsetX = isMob ? 0 : -160; // نصف عرض sidebar
+  const offsetY = isMob ? -60 : -30;
+  map.setView([lat, lng], 17, { animate: true });
+  setTimeout(() => map.panBy([offsetX, offsetY], { animate: true, duration: 0.3 }), 350);
+}
+
+function selectShop(id) {
+  if (activeId !== null && markers[activeId]) {
+    const prev = SHOPS.find(s => s.id === activeId);
+    if (prev) markers[activeId].setIcon(createMarkerIcon(prev, false));
+    document.querySelectorAll('.shop-card').forEach(c => c.classList.remove('active'));
+  }
+
+  activeId = id;
+  const shop = SHOPS.find(s => s.id === id);
+  if (!shop) return;
+
+  if (markers[id]) {
+    markers[id].setIcon(createMarkerIcon(shop, true));
+    panToShop(shop.lat, shop.lng);
+    if (window.innerWidth > 768) setTimeout(() => markers[id].openPopup(), 400);
+  } else if (shop.lat && shop.lng) {
+    addMarker(shop);
+    setTimeout(() => {
+      if (markers[id]) {
+        markers[id].setIcon(createMarkerIcon(shop, true));
+        panToShop(shop.lat, shop.lng);
+        if (window.innerWidth > 768) setTimeout(() => markers[id].openPopup(), 400);
+      }
+    }, 100);
+  }
+
+  const card = document.getElementById(`shop-${id}`);
+  if (card) {
+    card.classList.add('active');
+    card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+}
+
+function renderSidebar() {
+  const list = document.getElementById('shops-list');
+  const filtered = SHOPS.filter(s => {
+    const matchFilter = currentFilter === 'all' || s.type === currentFilter;
+    const matchSearch = !searchQuery || s.name.includes(searchQuery) || s.address.includes(searchQuery);
+    return matchFilter && matchSearch;
+  });
+
+  document.getElementById('shop-count').innerHTML =
+    `${toPersianNum(filtered.length)} <span>مغازه یافت شد</span>`;
+
+  if (filtered.length === 0) {
+    list.innerHTML = `<div class="empty-state">
+      <span class="material-icons-round">search_off</span>
+      <p>مغازه‌ای با این مشخصات یافت نشد</p>
+    </div>`;
+    return;
+  }
+
+  list.innerHTML = filtered.map(shop => `
+    <div class="shop-card" id="shop-${shop.id}" onclick="selectShop(${shop.id})">
+      <div class="shop-card-top">
+        <div class="shop-name">${shop.name}</div>
+        <span class="shop-type-badge ${TYPE_BADGE[shop.type]}">${TYPE_LABELS[shop.type]}</span>
+      </div>
+      <div class="shop-address">
+        <div class="shop-address-dot"></div>
+        <span>${shop.address}</span>
+      </div>
+      <div class="shop-phone">
+        <span>${shop.phone}</span>
+        <div class="shop-phone-dot"></div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function applyFilter(type, btn) {
+  currentFilter = type;
+  document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+  btn.classList.add('active');
+  renderSidebar();
+  Object.values(markers).forEach(m => map.removeLayer(m));
+  markers = {};
+  SHOPS.filter(s => (type === 'all' || s.type === type) && s.lat && s.lng).forEach(s => addMarker(s));
+}
+
+function filterShops(q) {
+  searchQuery = q.trim();
+  renderSidebar();
+  // مارکرهای نقشه رو فیلتر کن
+  Object.values(markers).forEach(m => map.removeLayer(m));
+  markers = {};
+  SHOPS.filter(s => {
+    const mf = currentFilter === 'all' || s.type === currentFilter;
+    const ms = !searchQuery || s.name.includes(searchQuery) || s.address.includes(searchQuery) || s.phone.includes(searchQuery);
+    return mf && ms && s.lat && s.lng;
+  }).forEach(s => addMarker(s));
+}
+
+let userMarker = null;
+let userCircle = null;
+
+function locateMe() {
+  const btn = document.getElementById('locate-btn');
+
+  if (!navigator.geolocation) {
+    showMapToast('مرورگر شما از موقعیت‌یابی پشتیبانی نمی‌کند');
+    return;
+  }
+
+  if (btn) {
+    btn.style.opacity = '0.7';
+    btn.style.pointerEvents = 'none';
+    btn.querySelector('span').textContent = 'my_location';
+  }
+
+  navigator.geolocation.getCurrentPosition(
+    pos => {
+      const lat = pos.coords.latitude;
+      const lng = pos.coords.longitude;
+      const acc = pos.coords.accuracy;
+
+      map.setView([lat, lng], 16, { animate: true });
+
+      if (userMarker) map.removeLayer(userMarker);
+      if (userCircle) map.removeLayer(userCircle);
+
+      // دایره دقت
+      userCircle = L.circle([lat, lng], {
+        radius: acc,
+        color: '#2196F3',
+        fillColor: '#2196F3',
+        fillOpacity: 0.08,
+        weight: 1
+      }).addTo(map);
+
+      // مارکر موقعیت
+      userMarker = L.marker([lat, lng], {
+        icon: L.divIcon({
+          className: '',
+          html: `<div style="width:16px;height:16px;background:#2196F3;border:3px solid #fff;border-radius:50%;box-shadow:0 0 0 4px rgba(33,150,243,0.25)"></div>`,
+          iconSize: [16, 16],
+          iconAnchor: [8, 8]
+        })
+      }).addTo(map);
+
+      userMarker.bindPopup(
+        `<div style="font-family:Vazirmatn,sans-serif;font-size:13px;direction:rtl;padding:6px 4px;white-space:nowrap">
+          📍 &nbsp;موقعیت شما
+        </div>`
+      ).openPopup();
+
+      if (btn) { btn.style.opacity = '1'; btn.style.pointerEvents = 'auto'; }
+    },
+    err => {
+      if (btn) { btn.style.opacity = '1'; btn.style.pointerEvents = 'auto'; }
+      const msgs = {
+        1: 'دسترسی به موقعیت رد شد. در تنظیمات مرورگر، دسترسی مکان را فعال کنید.',
+        2: 'موقعیت شما پیدا نشد. دوباره امتحان کنید.',
+        3: 'زمان دریافت موقعیت تمام شد. دوباره امتحان کنید.'
+      };
+      showMapToast(msgs[err.code] || 'خطا در دریافت موقعیت');
+    },
+    { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+  );
+}
+
+function showMapToast(msg) {
+  let t = document.getElementById('map-toast');
+  if (!t) {
+    t = document.createElement('div');
+    t.id = 'map-toast';
+    t.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#1A1916;color:#fff;padding:10px 18px;border-radius:8px;font-family:Vazirmatn,sans-serif;font-size:13px;z-index:9999;direction:rtl;box-shadow:0 4px 12px rgba(0,0,0,0.2)';
+    document.body.appendChild(t);
+  }
+  t.textContent = msg;
+  t.style.display = 'block';
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => { t.style.display = 'none'; }, 4000);
+}
+
+function callShop(phone) {
+  alert('تماس با: ' + phone);
+}
+
+function navigate(lat, lng) {
+  window.open(`https://www.openstreetmap.org/directions?from=&to=${lat},${lng}`, '_blank');
+}
+
+function toPersianNum(n) {
+  return n.toString().replace(/\d/g, d => '۰۱۲۳۴۵۶۷۸۹'[d]);
+}
+
+
+/* ════ LANDING JS ════ */
+function setTab(id,btn){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
+  document.querySelectorAll('.sw-btn').forEach(b=>b.classList.remove('on'));
+  document.getElementById('tab-'+id).classList.add('on');
+  btn.classList.add('on');
+}
+function faq(btn){
+  const item=btn.closest('.faq-item');
+  const open=item.classList.contains('on');
+  document.querySelectorAll('.faq-item.on').forEach(i=>i.classList.remove('on'));
+  if(!open)item.classList.add('on');
+}
+const io=new IntersectionObserver(entries=>{
+  entries.forEach(e=>{if(e.isIntersecting)e.target.classList.add('in')});
+},{threshold:.1});
+document.querySelectorAll('.fade').forEach(el=>io.observe(el));
+
+
+/* ════ INIT FLOW ════ */
+// Override startApp: after popup → show map
+function startApp() {
+  const overlay = document.getElementById('popup-overlay');
+  const card = document.getElementById('popup-card');
+  overlay.style.pointerEvents = 'none';
+  card.style.animation = 'popupExit 0.3s ease forwards';
+  overlay.style.animation = 'overlayExit 0.4s ease 0.15s forwards';
+  setTimeout(() => {
+    overlay.style.display = 'none';
+    overlay.style.pointerEvents = 'auto';
+    document.body.classList.remove('popup-open');
+    document.body.classList.add('map-mode');
+    showSection('map');
+  }, 500);
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+  document.body.classList.add('map-mode', 'popup-open');
+  const app = document.getElementById('app');
+  app.style.display = 'flex';
+  initMap();
+  // IntersectionObserver for landing fade animations
+  const io = new IntersectionObserver(entries => {
+    entries.forEach(e => { if(e.isIntersecting) e.target.classList.add('in'); });
+  }, {threshold: 0.1});
+  document.querySelectorAll('#landing-view .fade').forEach(el => io.observe(el));
+});
+
+
+/* ═══ MOBILE UI ══════════════════════════════════════════ */
+function isMobile() { return window.innerWidth <= 768; }
+
+function mobFilter(type, btn) {
+  currentFilter = type;
+  document.querySelectorAll('.mob-chip').forEach(b => b.classList.remove('on'));
+  btn.classList.add('on');
+  // sync desktop filter too
+  document.querySelectorAll('.filter-chip').forEach(b => b.classList.remove('active'));
+  renderMobCards();
+  Object.values(markers).forEach(m => map.removeLayer(m));
+  markers = {};
+  SHOPS.filter(s => (type === 'all' || s.type === type) && s.lat && s.lng).forEach(s => addMarker(s));
+}
+
+function renderMobCards() {
+  if (!isMobile()) return;
+  const list = document.getElementById('mob-card-list');
+  if (!list) return;
+
+  const filtered = SHOPS.filter(s => {
+    const mf = currentFilter === 'all' || s.type === currentFilter;
+    const ms = !searchQuery || s.name.includes(searchQuery) || s.address.includes(searchQuery);
+    return mf && ms;
+  });
+
+  if (!filtered.length) {
+    list.innerHTML = '';
+    return;
+  }
+
+  const TYPE_LABELS = { gold:'طلافروشی', silver:'نقره‌فروشی', jewelry:'جواهرفروشی', coin:'سکه‌فروشی' };
+  const BADGE_COLOR = { gold:'background:#FEF3EE;color:#D97757', silver:'background:#F0F0F8;color:#404060', jewelry:'background:#FFF0F5;color:#900050', coin:'background:#F0F8F0;color:#2A6030' };
+  const TYPE_ICON = { gold:'⚜', silver:'🥈', jewelry:'💎', coin:'🪙' };
+
+  list.innerHTML = filtered.map(s => `
+      <div class="mob-card-item" onclick="mobSelectShop(${s.id})">
+        <div class="mob-card-icon">${TYPE_ICON[s.type]||'⚜'}</div>
+        <div class="mob-card-info">
+          <div class="mob-card-name">${s.name}</div>
+          <span class="mob-card-badge" style="${BADGE_COLOR[s.type]||''}">${TYPE_LABELS[s.type]||''}</span>
+          <div class="mob-card-addr">📍 ${s.address}</div>
+          <div class="mob-card-phone">📞 ${s.phone}</div>
+        </div>
+        <span class="material-icons-round mob-card-arrow">chevron_left</span>
+      </div>`).join('');
+}
+
+function mobSelectShop(id) {
+  const shop = SHOPS.find(s => String(s.id) === String(id));
+  if (!shop) return;
+  if (shop.lat && shop.lng) panToShop(shop.lat, shop.lng);
+  if (window.innerWidth <= 768) openMobSheet(shop);
+}
+
+function openMobSheet(shop) {
+  const TL = { gold:'طلافروشی', silver:'نقره‌فروشی', jewelry:'جواهرفروشی', coin:'سکه‌فروشی' };
+  const BC = { gold:'background:#FEF3EE;color:#C05020', silver:'background:#F0F0F8;color:#404060', jewelry:'background:#FFF0F5;color:#900050', coin:'background:#F0F8F0;color:#2A6030' };
+  const photos = shop.photos || [];
+
+  const galleryHtml = photos.length ? `
+    <div style="margin-bottom:16px">
+      <div style="display:flex;flex-direction:row-reverse;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <span style="font-size:14px;font-weight:600;color:var(--t1)">گالری تصاویر</span>
+        <div style="display:flex;gap:4px">
+          <button onclick="pgScroll('ms',- 136)" style="width:28px;height:28px;border-radius:50%;border:1px solid var(--border);background:var(--bg);cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center">‹</button>
+          <button onclick="pgScroll('ms', 136)" style="width:28px;height:28px;border-radius:50%;border:1px solid var(--border);background:var(--bg);cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center">›</button>
+        </div>
+      </div>
+      <div id="pgt-ms" style="display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding-left:20px">
+        ${photos.map((url,i) => `<img src="${url}" onclick="openLightboxArr(${i},'${shop.id}')" style="width:120px;height:120px;object-fit:cover;border-radius:10px;flex-shrink:0;cursor:zoom-in" loading="lazy">`).join('')}
+      </div>
+    </div>` : '';
+
+  document.getElementById('mob-sheet-content').innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;direction:rtl">
+      <div style="text-align:right">
+        <div style="font-size:17px;font-weight:700;color:var(--t1);margin-bottom:6px">${shop.name}</div>
+        <span style="font-size:12px;padding:3px 10px;border-radius:20px;${BC[shop.type]||''}">${TL[shop.type]||shop.type}</span>
+      </div>
+      <button onclick="closeMobSheet()" style="background:none;border:none;cursor:pointer;color:var(--t3);font-size:20px;line-height:1;padding:0">✕</button>
+    </div>
+    ${galleryHtml}
+    <div style="border-top:1px solid var(--border);padding-top:12px;display:flex;flex-direction:column;gap:8px">
+      <div style="display:flex;align-items:flex-start;gap:8px">
+        
