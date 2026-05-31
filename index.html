@@ -2433,50 +2433,79 @@ function autoLocate() {
   );
 }
 
-async function fetchShops() {
+const SHOPS_CACHE_KEY = 'vimap_shops_cache';
+const SHOPS_CACHE_TTL = 5 * 60 * 1000; // 5 دقیقه
+
+function parseShops(data) {
+  return data.map(s => ({
+    id:      s.id,
+    name:    s.name,
+    phone:   s.phone,
+    address: s.address,
+    type:    s.type || 'gold',
+    lat:     parseFloat(s.lat) || null,
+    lng:     parseFloat(s.lng) || null,
+    active:  s.active != 0 ? 1 : 0,
+    photos:  s.photos ? String(s.photos).split('\n').filter(l => l.trim()) : []
+  })).filter(s => s.active);
+}
+
+function applyShops(shops) {
+  SHOPS = shops;
+  Object.values(markers).forEach(m => map.removeLayer(m));
+  markers = {};
+  SHOPS.forEach(shop => { if(shop.lat && shop.lng) addMarker(shop); });
+  renderSidebar();
+  renderMobCards();
+}
+
+function fetchShopsFromNetwork() {
   return new Promise((resolve) => {
     const callbackName = 'cb_shops_' + Date.now();
     const script = document.createElement('script');
     const timeout = setTimeout(() => {
       document.head.removeChild(script);
       delete window[callbackName];
-      console.warn('fetchShops timeout');
-      SHOPS = [];
-      Object.values(markers).forEach(m => map.removeLayer(m));
-      markers = {};
-      renderSidebar();
-      renderMobCards();
-      resolve();
-    }, 5000);
+      resolve(null);
+    }, 8000);
 
     window[callbackName] = function(data) {
       clearTimeout(timeout);
       document.head.removeChild(script);
       delete window[callbackName];
-      SHOPS = data.map(s => ({
-        id:      s.id,
-        name:    s.name,
-        phone:   s.phone,
-        address: s.address,
-        type:    s.type || 'gold',
-        lat:     parseFloat(s.lat) || null,
-        lng:     parseFloat(s.lng) || null,
-        active:  s.active != 0 ? 1 : 0,
-        photos:  s.photos ? String(s.photos).split('\n').filter(l => l.trim()) : []
-      })).filter(s => s.active);
-
-      // نمایش مارکرها روی نقشه
-      Object.values(markers).forEach(m => map.removeLayer(m));
-      markers = {};
-      SHOPS.forEach(shop => { if(shop.lat && shop.lng) addMarker(shop); });
-      renderSidebar();
-      renderMobCards();
-      resolve();
+      const shops = parseShops(data);
+      // ذخیره در cache
+      try {
+        localStorage.setItem(SHOPS_CACHE_KEY, JSON.stringify({ ts: Date.now(), shops }));
+      } catch(e) {}
+      resolve(shops);
     };
 
     script.src = `${SHEETS_URL}?action=shops&callback=${callbackName}`;
     document.head.appendChild(script);
   });
+}
+
+async function fetchShops() {
+  // اول cache رو نشون بده
+  try {
+    const cached = localStorage.getItem(SHOPS_CACHE_KEY);
+    if (cached) {
+      const { ts, shops } = JSON.parse(cached);
+      if (shops && shops.length > 0) {
+        applyShops(shops);
+        // اگه cache قدیمی‌تر از TTL بود، در پس‌زمینه آپدیت کن
+        if (Date.now() - ts > SHOPS_CACHE_TTL) {
+          fetchShopsFromNetwork().then(shops => { if(shops) applyShops(shops); });
+        }
+        return;
+      }
+    }
+  } catch(e) {}
+
+  // اگه cache نبود، از شبکه بگیر
+  const shops = await fetchShopsFromNetwork();
+  if (shops) applyShops(shops);
 }
 
 function createMarkerIcon(shop, isActive) {
