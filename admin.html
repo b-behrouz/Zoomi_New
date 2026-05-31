@@ -486,11 +486,9 @@ body {
     </div>
     <div class="stat-card">
       <div class="stat-icon" style="background:#FFE4EC">💎</div>
-      <div><div class="stat-val" id="stat-jewelry">—</div><div class="stat-lbl">جواهرفروشی</div></div>
     </div>
     <div class="stat-card">
       <div class="stat-icon" style="background:#E8F4E8">🪙</div>
-      <div><div class="stat-val" id="stat-coin">—</div><div class="stat-lbl">سکه‌فروشی</div></div>
     </div>
   </div>
 
@@ -537,14 +535,7 @@ body {
               <input type="radio" name="type" value="silver">
               <span class="type-emoji">🥈</span> نقره‌فروشی
             </label>
-            <label class="type-option" onclick="selectType('jewelry',this)">
-              <input type="radio" name="type" value="jewelry">
-              <span class="type-emoji">💎</span> جواهرفروشی
-            </label>
-            <label class="type-option" onclick="selectType('coin',this)">
-              <input type="radio" name="type" value="coin">
-              <span class="type-emoji">🪙</span> سکه‌فروشی
-            </label>
+
           </div>
         </div>
         <input type="hidden" id="f-lat">
@@ -642,7 +633,7 @@ body {
 
 <script>
 // ── CONFIG ────────────────────────────────────────────────────────────
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby1_jyYatHl6wnWXIZ9W9BF6BjkAjpZqIqo-bu5SMOZagG75rEibPu16RrScCDxp5KBIw/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwQGAj8czJ5eflBHbhhNZbjd-ILl8ouOeZreXkqupjsLw5NoUdlDrwWJvvropqioZ_Mug/exec';
 
 // ── STATE ─────────────────────────────────────────────────────────────
 let adminUser = '';
@@ -851,8 +842,8 @@ async function loadShops() {
   });
 }
 
-const TYPE_LABELS = { gold:'طلافروشی', silver:'نقره‌فروشی', jewelry:'جواهرفروشی', coin:'سکه‌فروشی' };
-const TYPE_TAG    = { gold:'tag-gold', silver:'tag-silver', jewelry:'tag-jewelry', coin:'tag-coin' };
+const TYPE_LABELS = { gold:'طلافروشی', silver:'نقره‌فروشی' };
+const TYPE_TAG    = { gold:'tag-gold', silver:'tag-silver' };
 
 function renderTable(shops) {
   const tbody = document.getElementById('shops-tbody');
@@ -891,7 +882,7 @@ function renderTable(shops) {
 }
 
 function renderStats(shops) {
-  ['gold','silver','jewelry','coin'].forEach(t => {
+  ['gold','silver'].forEach(t => {
     const el = document.getElementById(`stat-${t}`);
     if (el) el.textContent = shops.filter(s => s.type === t && s.active != 0).length;
   });
