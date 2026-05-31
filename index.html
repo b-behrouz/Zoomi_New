@@ -2905,12 +2905,10 @@ function openMobSheet(shop) {
     </div>` : '';
 
   document.getElementById('mob-sheet-content').innerHTML = `
-    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;direction:rtl">
-      <div style="text-align:right">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
-          <div style="font-size:17px;font-weight:700;color:var(--t1)">${shop.name}</div>
-          <span style="font-size:12px;padding:3px 10px;border-radius:20px;margin-right:4px;${BC[shop.type]||''}">${TL[shop.type]||shop.type}</span>
-        </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;direction:rtl">
+      <div style="display:flex;align-items:center;gap:8px">
+        <div style="font-size:17px;font-weight:700;color:var(--t1)">${shop.name}</div>
+        <span style="font-size:12px;padding:3px 10px;border-radius:20px;${BC[shop.type]||''}">${TL[shop.type]||shop.type}</span>
       </div>
       <button onclick="closeMobSheet()" style="background:none;border:none;cursor:pointer;color:var(--t3);font-size:20px;line-height:1;padding:0">✕</button>
     </div>
