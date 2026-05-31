@@ -339,8 +339,6 @@ body {
 }
 .tag-gold { background: #FFF0C8; color: #7A4800; }
 .tag-silver { background: #E8E8F8; color: #404060; }
-.tag-jewelry { background: #FFE4EC; color: #800040; }
-.tag-coin { background: #E8F4E8; color: #204820; }
 
 .table-actions { display: flex; gap: 6px; }
 
@@ -633,7 +631,7 @@ body {
 
 <script>
 // ── CONFIG ────────────────────────────────────────────────────────────
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwQGAj8czJ5eflBHbhhNZbjd-ILl8ouOeZreXkqupjsLw5NoUdlDrwWJvvropqioZ_Mug/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxufEh1aP83hGIiZrwBhTWGCX5z0Dtj-Q_IF_A9FmZIL1NSP5HtkJ-yfxTmOMV_puDS3Q/exec';
 
 // ── STATE ─────────────────────────────────────────────────────────────
 let adminUser = '';
@@ -649,21 +647,10 @@ async function doLogin() {
 
   setLoading('login-btn', 'login-spinner', true);
 
-  return new Promise((resolve) => {
-    const cbName = 'cb_verify_' + Date.now();
-    const script = document.createElement('script');
-    const timer  = setTimeout(() => {
-      document.head.removeChild(script);
-      delete window[cbName];
-      document.getElementById('login-error').style.display = 'block';
-      setLoading('login-btn', 'login-spinner', false);
-      resolve();
-    }, 10000);
-
-    window[cbName] = function(data) {
-      clearTimeout(timer);
-      document.head.removeChild(script);
-      delete window[cbName];
+  return new Promise(async (resolve) => {
+    try {
+      const res = await fetch(`${SCRIPT_URL}?action=verify&u=${encodeURIComponent(user)}&p=${encodeURIComponent(pass)}`);
+      const data = await res.json();
       if (data.ok) {
         adminUser = user; adminPass = pass;
         document.getElementById('login-error').style.display = 'none';
@@ -675,18 +662,11 @@ async function doLogin() {
         adminUser = ''; adminPass = '';
         document.getElementById('login-error').style.display = 'block';
       }
-      setLoading('login-btn', 'login-spinner', false);
-      resolve();
-    };
-
-    script.onerror = function() {
-      clearTimeout(timer);
-      document.head.removeChild(script);
-      delete window[cbName];
+    } catch(e) {
       document.getElementById('login-error').style.display = 'block';
-      setLoading('login-btn', 'login-spinner', false);
-      resolve();
-    };
+    }
+    setLoading('login-btn', 'login-spinner', false);
+    resolve();
 
     script.src = `${SCRIPT_URL}?action=verify&u=${encodeURIComponent(user)}&p=${encodeURIComponent(pass)}&callback=${cbName}`;
     document.head.appendChild(script);
